@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -20,7 +19,7 @@ func main() {
 	sts := "9933143213"
 	err := checkShtraf(nomer, region, sts)
 	if err != nil {
-		err = fmt.Errorf("Ошибка при получении штрафов: %v", err)
+		err = fmt.Errorf("ошибка при получении штрафов: %v", err)
 		log.Println(err)
 	}
 
@@ -48,17 +47,21 @@ func checkShtraf(nomer, region, sts string) (err error) {
 		return err
 	}
 	if res.StatusCode != 200 {
-		err = fmt.Errorf("Выполнение запроса %v завершиблось ошибкой %v: %v\n", url, res.Status, string(body))
+		err = fmt.Errorf("выполнение запроса %v завершиблось ошибкой %v: %v", url, res.Status, string(body))
 		return err
 	}
 	m := shtrafStrukt{}
 	err = json.Unmarshal(body, &m)
 	if err != nil {
-		err = fmt.Errorf("Ошибка парсинга боди запроса на получение списка штрафов: %v Боди: %v\n", err, string(body))
+		err = fmt.Errorf("ошибка парсинга боди запроса на получение списка штрафов: %v Боди: %v", err, string(body))
 		return err
 	}
 	var post string
 	var divid int
+	if m.Code != 200 {
+		err = fmt.Errorf("выполнение запроса %v завершиблось ошибкой %v: %v", url, m.Message, string(body))
+		return err
+	}
 	cafapPicsToken := m.CafapPicsToken
 	for _, shtraf := range m.Data {
 		dateNarush := shtraf.DateDecis
@@ -69,7 +72,7 @@ func checkShtraf(nomer, region, sts string) (err error) {
 	}
 	err = linkImage(post, nomer+region, fmt.Sprintf("%v", divid), cafapPicsToken)
 	if err != nil {
-		err = fmt.Errorf("Ошибка получения картинки со штрафом: %v", err)
+		err = fmt.Errorf("ошибка получения картинки со штрафом: %v", err)
 		return err
 	}
 	// fmt.Println(string(body))
@@ -98,61 +101,31 @@ func linkImage(post, regnum, divid, cafapPicsToken string) (err error) {
 		return err
 	}
 	if res.StatusCode != 200 {
-		err = fmt.Errorf("Выполнение запроса %v завершиблось ошибкой %v: %v\n", url, res.Status, string(body))
+		err = fmt.Errorf("выполнение запроса %v завершиблось ошибкой %v: %v", url, res.Status, string(body))
 		return err
 	}
 	m := linkImageStruct{}
 	err = json.Unmarshal(body, &m)
 	if err != nil {
-		err = fmt.Errorf("Ошибка парсинга боди запроса на получение картинки штрафа: %v Боди: %v\n", err, string(body))
+		err = fmt.Errorf("ошибка парсинга боди запроса на получение картинки штрафа: %v Боди: %v", err, string(body))
 		return err
 	}
-	// link := fmt.Sprintf("data:image/jpeg;base64,%v", m.Photos[0].Base64Value)
 	link := fmt.Sprintf("%v", m.Photos[0].Base64Value)
-	// fmt.Println(link)
-	// fmt.Println(string(body))
-	// err = DownloadFile("./screen.jpeg", link)
 	err = base64toJpg("./screen.jpeg", link)
-	return err
-}
-
-func DownloadFile(filepath string, url string) (err error) {
-	b := url
-	unbased, err := base64.StdEncoding.DecodeString(b)
-	if err != nil {
-		panic("Cannot decode b64")
-	}
-	fmt.Println(string(unbased))
-	r := bytes.NewReader(unbased)
-	im, err := jpeg.Decode(r)
-	if err != nil {
-		panic("Bad png")
-	}
-	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0777)
-	if err != nil {
-		panic("Cannot open file")
-	}
-	fmt.Println(f)
-	fmt.Println(im)
-	jpeg.Decode(r)
 	return err
 }
 
 func base64toJpg(filepath, data string) (err error) {
 	reader := base64.NewDecoder(base64.StdEncoding, strings.NewReader(data))
-	m, formatString, err := image.Decode(reader)
+	m, _, err := image.Decode(reader)
 	if err != nil {
 		return err
 	}
-	bounds := m.Bounds()
-	fmt.Println("base64toJpg", bounds, formatString)
-
 	//Encode from image format to writer
 	f, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0777)
 	if err != nil {
 		return err
 	}
-
 	err = jpeg.Encode(f, m, &jpeg.Options{Quality: 75})
 	if err != nil {
 		return err
