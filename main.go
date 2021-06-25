@@ -68,7 +68,7 @@ func checkShtraf(nomer, region, sts string) (err error) {
 		fmt.Printf("Дата нарушения %v\n", dateNarush)
 		post = shtraf.NumPost
 		divid = shtraf.Division
-		err = linkImage(post, nomer+region, fmt.Sprintf("%v", divid), cafapPicsToken)
+		err = linkImage(post, nomer+region, fmt.Sprintf("%v", divid), cafapPicsToken, shtraf.NumPost+".jpeg")
 		if err != nil {
 			err = fmt.Errorf("ошибка получения картинки со штрафом: %v", err)
 			return err
@@ -79,7 +79,7 @@ func checkShtraf(nomer, region, sts string) (err error) {
 }
 
 //linkImage Получаем ссылку на картинку
-func linkImage(post, regnum, divid, cafapPicsToken string) (err error) {
+func linkImage(post, regnum, divid, cafapPicsToken, filename string) (err error) {
 	url := "https://check.gibdd.ru/proxy/check/fines/pics"
 	method := "POST"
 	payload := strings.NewReader("post=" + post + "&regnum=" + regnum + "&divid=" + divid + "&cafapPicsToken=" + cafapPicsToken)
@@ -110,7 +110,7 @@ func linkImage(post, regnum, divid, cafapPicsToken string) (err error) {
 		return err
 	}
 	link := fmt.Sprintf("%v", m.Photos[0].Base64Value)
-	err = base64toJpg("./screen.jpeg", link)
+	err = base64toJpg("./"+filename, link)
 	return err
 }
 
