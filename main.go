@@ -65,6 +65,7 @@ func checkShtraf(nomer, region, sts string) (err error) {
 	cafapPicsToken := m.CafapPicsToken
 	for _, shtraf := range m.Data {
 		dateNarush := shtraf.DateDecis
+		fmt.Printf("Штраф на сумму %vр, со скидкой можно опатить до %v\n", shtraf.Summa, shtraf.DateDiscount)
 		fmt.Printf("Дата нарушения %v\n", dateNarush)
 		post = shtraf.NumPost
 		divid = shtraf.Division
@@ -129,7 +130,6 @@ func base64toJpg(filepath, data string) (err error) {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Jpg file", filepath, "created")
 	return err
 }
 
