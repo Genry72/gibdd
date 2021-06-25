@@ -68,12 +68,11 @@ func checkShtraf(nomer, region, sts string) (err error) {
 		fmt.Printf("Дата нарушения %v\n", dateNarush)
 		post = shtraf.NumPost
 		divid = shtraf.Division
-
-	}
-	err = linkImage(post, nomer+region, fmt.Sprintf("%v", divid), cafapPicsToken)
-	if err != nil {
-		err = fmt.Errorf("ошибка получения картинки со штрафом: %v", err)
-		return err
+		err = linkImage(post, nomer+region, fmt.Sprintf("%v", divid), cafapPicsToken)
+		if err != nil {
+			err = fmt.Errorf("ошибка получения картинки со штрафом: %v", err)
+			return err
+		}
 	}
 	// fmt.Println(string(body))
 	return err
