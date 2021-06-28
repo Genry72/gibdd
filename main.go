@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"gibdd/telegram"
 	"image"
 	"image/jpeg"
 	"io/ioutil"
@@ -11,18 +12,49 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 func main() {
 	nomer := "Х752ТТ"
 	region := "152"
 	sts := "9933143213"
+	go func() {
+		for {
+			//Получаем офсет
+			offset, err := telegram.GetOfset()
+			log.Println(offset)
+			if err != nil {
+				log.Printf("Ошибка получения офсета %v\n", err)
+				time.Sleep(5 * time.Minute)
+				continue
+			}
+			if offset == 0 {
+				continue
+			}
+			for {
+				log.Println(offset)
+				message, newOffset, err := telegram.Getupdate(offset)
+				if err != nil {
+					log.Printf("Ошибка получения сообщения %v\n", err)
+					time.Sleep(5 * time.Minute)
+					continue
+				}
+				if message == "" {
+					offset = newOffset
+					continue
+				}
+				log.Printf("Получено сообщение: %v", message)
+				offset = newOffset
+			}
+		}
+	}()
+	time.Sleep(60 * time.Minute)
 	err := checkShtraf(nomer, region, sts)
 	if err != nil {
 		err = fmt.Errorf("ошибка при получении штрафов: %v", err)
 		log.Println(err)
 	}
-
 }
 
 //checkShtraf Функция проверки штрафов
