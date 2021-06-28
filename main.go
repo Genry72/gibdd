@@ -34,7 +34,7 @@ func main() {
 			}
 			for {
 				log.Println(offset)
-				message, newOffset, err := telegram.Getupdate(offset)
+				message, sender, chatID, newOffset, username, err := telegram.Getupdate(offset)
 				if err != nil {
 					log.Printf("Ошибка получения сообщения %v\n", err)
 					time.Sleep(5 * time.Minute)
@@ -44,7 +44,7 @@ func main() {
 					offset = newOffset
 					continue
 				}
-				log.Printf("Получено сообщение: %v", message)
+				log.Printf("Получено сообщение от пользователя %v chatID:%v username:%v с текстом: %v", sender, chatID, username, message)
 				offset = newOffset
 			}
 		}

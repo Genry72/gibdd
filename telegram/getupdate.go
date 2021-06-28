@@ -48,46 +48,46 @@ func GetOfset() (offset int, err error) {
 	return m.Result[0].UpdateID, err
 }
 
-func Getupdate(offset int) (message string, newOffset int, err error) {
+func Getupdate(offset int) (message, sender string, chatID int, newOffset int, username string, err error) {
 	token := os.Getenv("telegaGibddToken")
 	if token == "" {
 		err = fmt.Errorf("не задан токен")
-		return message, newOffset, err
+		return message, sender, chatID, newOffset, username, err
 	}
 	url := "https://api.telegram.org/bot" + token + "/getUpdates?timeout=50&offset=" + fmt.Sprintf("%v", offset)
 	method := "GET"
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
-		return message, newOffset, err
+		return message, sender, chatID, newOffset, username, err
 	}
 	res, err := client.Do(req)
 	if err != nil {
-		return message, newOffset, err
+		return message, sender, chatID, newOffset, username, err
 	}
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return message, newOffset, err
+		return message, sender, chatID, newOffset, username, err
 	}
 	if res.StatusCode != 200 {
 		err = fmt.Errorf("ошибка получения офсета %v: %v", res.Status, err)
-		return message, newOffset, err
+		return message, sender, chatID, newOffset, username, err
 	}
 	m := GetupdateStruct{}
 	err = json.Unmarshal(body, &m)
 	if err != nil {
 		err = fmt.Errorf("ошибка парсинга боди запроса на получение офсета: %v Боди: %v", err, string(body))
-		return message, newOffset, err
+		return message, sender, chatID, newOffset, username, err
 	}
 	if len(m.Result) == 0 { //Таймаут по долгому запросу
-		return message, offset, err
+		return message, sender, chatID, offset, username, err
 	}
 	if m.Result[0].Message.Text == "" { //Тип сообщения не текст
 		log.Println("Тип не текст")
-		return message, offset + 1, err
+		return message, sender, chatID, offset + 1, username, err
 	}
-	return m.Result[0].Message.Text, offset + 1, err
+	return m.Result[0].Message.Text, m.Result[0].Message.From.FirstName + " " + m.Result[0].Message.From.LastName, m.Result[0].Message.Chat.ID, offset + 1, m.Result[0].Message.From.Username, err
 }
 
 type GetupdateStruct struct {
