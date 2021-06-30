@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,6 +20,11 @@ import (
 )
 
 func main() {
+	myID, _ := strconv.Atoi(os.Getenv("myIDtelega"))
+	if myID == 0 {
+		err := fmt.Errorf("не задан myID")
+		log.Fatal(err)
+	}
 	nomer := "Х752ТТ"
 	region := "152"
 	sts := "9933143213"
@@ -35,8 +41,8 @@ func main() {
 		name		TEXT,
 		chatID		INTEGER,
 		username	INTEGER,
-		create_date TIMESTAMPTZ,
-		navi_date 	TIMESTAMPTZ
+		create_date TEXT,
+		navi_date 	TEXT
 	  )
 	`
 	//Создаем таблицу с рег данными
@@ -46,8 +52,8 @@ func main() {
 		regnum		TEXT,
 		stsnum		INTEGER,
 		user_id		INTEGER, --Принадлежность пользоватлею
-		create_date TIMESTAMPTZ,
-		navi_date 	TIMESTAMPTZ
+		create_date TEXT,
+		navi_date 	TEXT
 	  )
 	`
 	_, err = db.Exec(usersTab)
@@ -58,7 +64,6 @@ func main() {
 	if err != nil {
 		log.Fatal("Не удальсь создать таблицу users")
 	}
-
 	go func() {
 		for {
 			//Получаем офсет
@@ -83,22 +88,16 @@ func main() {
 					continue
 				}
 				log.Printf("Получено сообщение от пользователя %v chatID:%v username:%v с текстом: %v", sender, chatID, username, message)
-				err = telegram.SendMessage(fmt.Sprintf("Debug: Получено сообщение от пользователя %v chatID:%v username:%v с текстом: %v", sender, chatID, username, message), 153123826) //Все сообщения боту для дебага мне
-				if err != nil {
-					log.Printf("Ошибка отправки сообщения: %v", err)
-				}
+				telegram.SendMessage(fmt.Sprintf("Debug: Получено сообщение от пользователя %v chatID:%v username:%v с текстом: %v", sender, chatID, username, message), myID) //Все сообщения боту для дебага мне
 
 				command := strings.Split(message, " ") //бьем пробелами
 				switch command[0] {                    //Берем первое значение
 
 				case "add":
-					err := telegram.SendMessage("Добавляем", chatID)
-					if err != nil {
-						log.Printf("Ошибка отправки сообщения: %v", err)
-					}
+					telegram.SendMessage("Добавляем", chatID)
 
 				case "/start", "/help":
-					err := telegram.SendMessage(`
+					telegram.SendMessage(`
 Бот находится на этапе разрабоки!
 Контактные данные http://t.me/valentinsemenov
 Для добавления регистрационных данных отправьте:
@@ -108,15 +107,16 @@ add A999AA555:1111111111
 555                 регион
 1111111111  Свидетельство о регистрации (СТС)
 `, chatID)
+					//Сразу добавляем пользователя в базу
+					insert := "INSERT INTO users (name, chatID, username, create_date, navi_date) VALUES ($1, $2, $3, $4, $5)"
+					statement, _ := db.Prepare(insert)                                                          //Подготовка вставки
+					_, err = statement.Exec(sender, chatID, username, time.Now().String(), time.Now().String()) //Вставка с параметрами
 					if err != nil {
-						log.Printf("Ошибка отправки сообщения: %v", err)
+						err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
+						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
 					}
-
 				default:
-					err := telegram.SendMessage("Не корректная команда, наберите /help для справки", chatID)
-					if err != nil {
-						log.Printf("Ошибка отправки сообщения: %v", err)
-					}
+					telegram.SendMessage("Не корректная команда, наберите /help для справки", chatID)
 				}
 				offset = newOffset
 			}
