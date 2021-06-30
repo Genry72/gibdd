@@ -89,7 +89,16 @@ func main() {
 				}
 				switch message {
 				case "/help":
-					err := telegram.SendMessage("Выводим справку", chatID)
+					err := telegram.SendMessage(`
+Бот находится на этапе разрабоки!
+Контактные данные http://t.me/valentinsemenov
+Для добавления регистрационных данных отправьте:
+add A999AA555:1111111111
+Где:
+А999АА          госномер в русской расскладке
+555                 регион
+1111111111  Свидетельство о регистрации (СТС)
+`, chatID)
 					if err != nil {
 						log.Printf("Ошибка отправки сообщения: %v", err)
 					}
