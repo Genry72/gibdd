@@ -4,16 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"strings"
 )
 
-func SendMessage(message string, chatid int) (err error) {
+func SendMessage(message string, chatid int) {
 	token := os.Getenv("telegaGibddToken")
 	if token == "" {
-		err = fmt.Errorf("не задан токен")
-		return err
+		err := fmt.Errorf("не задан токен")
+		log.Println(err)
+		return
 	}
 	url := "https://api.telegram.org/bot" + token + "/sendMessage"
 	method := "POST"
@@ -21,33 +23,37 @@ func SendMessage(message string, chatid int) (err error) {
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
-		return err
+		log.Println(err)
+		return
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	res, err := client.Do(req)
 	if err != nil {
-		return err
+		log.Println(err)
+		return
 	}
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return
 	}
 	if res.StatusCode != 200 {
 		err = fmt.Errorf("ошибка отправки сообщения в телеграм %v: %v", res.Status, string(body))
-		return err
+		log.Println(err)
+		return
 	}
 	t := sendMsgTelegaStruct{}
 	err = json.Unmarshal(body, &t)
 	if err != nil {
 		err = fmt.Errorf("ошибка Парсинга боди ответа на отправку сообщения %v", string(body))
-		return err
+		log.Println(err)
+		return
 	}
 	if !t.Ok {
 		err = fmt.Errorf("ошибка отправки сообщения в телеграм %v: %v", res.Status, string(body))
-		return err
+		log.Println(err)
+		return
 	}
-	return err
 }
 
 type sendMsgTelegaStruct struct {
