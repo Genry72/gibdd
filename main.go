@@ -39,6 +39,7 @@ func main() {
 		navi_date 	TIMESTAMPTZ
 	  )
 	`
+	//Создаем таблицу с рег данными
 	regInfoTab := `
 	CREATE TABLE IF NOT EXISTS regInfo(
 		id    		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
@@ -62,7 +63,6 @@ func main() {
 		for {
 			//Получаем офсет
 			offset, err := telegram.GetOfset()
-			log.Println(offset)
 			if err != nil {
 				log.Printf("Ошибка получения офсета %v\n", err)
 				time.Sleep(5 * time.Minute)
@@ -72,7 +72,6 @@ func main() {
 				continue
 			}
 			for {
-				log.Println(offset)
 				message, sender, chatID, newOffset, username, err := telegram.Getupdate(offset)
 				if err != nil {
 					log.Printf("Ошибка получения сообщения %v\n", err)
@@ -84,6 +83,17 @@ func main() {
 					continue
 				}
 				log.Printf("Получено сообщение от пользователя %v chatID:%v username:%v с текстом: %v", sender, chatID, username, message)
+				err = telegram.SendMessage(fmt.Sprintf("Debug: Получено сообщение от пользователя %v chatID:%v username:%v с текстом: %v", sender, chatID, username, message), 153123826) //Все сообщения боту для дебага мне
+				if err != nil {
+					log.Printf("Ошибка отправки сообщения: %v", err)
+				}
+				switch message {
+				case "/help":
+					err := telegram.SendMessage("Выводим справку", chatID)
+					if err != nil {
+						log.Printf("Ошибка отправки сообщения: %v", err)
+					}
+				}
 				offset = newOffset
 			}
 		}
@@ -94,6 +104,7 @@ func main() {
 		err = fmt.Errorf("ошибка при получении штрафов: %v", err)
 		log.Println(err)
 	}
+	time.Sleep(60 * time.Minute)
 }
 
 //checkShtraf Функция проверки штрафов
@@ -182,7 +193,7 @@ func linkImage(post, regnum, divid, cafapPicsToken, filename string) (err error)
 		return err
 	}
 	if len(m.Photos) == 0 {
-		err = fmt.Errorf("ошибка получения картинки штрафа Боди: %v", string(body))
+		err = fmt.Errorf("нет урла штрафа: %v", string(body))
 		return err
 	}
 	link := fmt.Sprintf("%v", m.Photos[0].Base64Value)
