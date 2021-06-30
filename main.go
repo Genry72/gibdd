@@ -87,8 +87,17 @@ func main() {
 				if err != nil {
 					log.Printf("Ошибка отправки сообщения: %v", err)
 				}
-				switch message {
-				case "/help":
+
+				command := strings.Split(message, " ") //бьем пробелами
+				switch command[0] {                    //Берем первое значение
+
+				case "add":
+					err := telegram.SendMessage("Добавляем", chatID)
+					if err != nil {
+						log.Printf("Ошибка отправки сообщения: %v", err)
+					}
+
+				case "/start", "/help":
 					err := telegram.SendMessage(`
 Бот находится на этапе разрабоки!
 Контактные данные http://t.me/valentinsemenov
@@ -99,6 +108,12 @@ add A999AA555:1111111111
 555                 регион
 1111111111  Свидетельство о регистрации (СТС)
 `, chatID)
+					if err != nil {
+						log.Printf("Ошибка отправки сообщения: %v", err)
+					}
+
+				default:
+					err := telegram.SendMessage("Не корректная команда, наберите /help для справки", chatID)
 					if err != nil {
 						log.Printf("Ошибка отправки сообщения: %v", err)
 					}
