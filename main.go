@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -13,12 +14,50 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
 	nomer := "Х752ТТ"
 	region := "152"
 	sts := "9933143213"
+	//Создаем базу если ее нет
+	db, err := sql.Open("sqlite3", "./gibdd.db")
+	if err != nil {
+		err = fmt.Errorf("ошибка создания БД:%v", err)
+		log.Fatal(err)
+	}
+	//Создаем таблицу с пользователями
+	usersTab := `
+	CREATE TABLE IF NOT EXISTS users(
+		id    		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+		name		TEXT,
+		chatID		INTEGER,
+		username	INTEGER,
+		create_date TIMESTAMPTZ,
+		navi_date 	TIMESTAMPTZ
+	  )
+	`
+	regInfoTab := `
+	CREATE TABLE IF NOT EXISTS regInfo(
+		id    		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+		regnum		TEXT,
+		stsnum		INTEGER,
+		user_id		INTEGER, --Принадлежность пользоватлею
+		create_date TIMESTAMPTZ,
+		navi_date 	TIMESTAMPTZ
+	  )
+	`
+	_, err = db.Exec(usersTab)
+	if err != nil {
+		log.Fatal("Не удальсь создать таблицу users")
+	}
+	_, err = db.Exec(regInfoTab)
+	if err != nil {
+		log.Fatal("Не удальсь создать таблицу users")
+	}
+
 	go func() {
 		for {
 			//Получаем офсет
@@ -49,8 +88,8 @@ func main() {
 			}
 		}
 	}()
-	time.Sleep(60 * time.Minute)
-	err := checkShtraf(nomer, region, sts)
+	// time.Sleep(60 * time.Minute)
+	err = checkShtraf(nomer, region, sts)
 	if err != nil {
 		err = fmt.Errorf("ошибка при получении штрафов: %v", err)
 		log.Println(err)
@@ -140,6 +179,10 @@ func linkImage(post, regnum, divid, cafapPicsToken, filename string) (err error)
 	err = json.Unmarshal(body, &m)
 	if err != nil {
 		err = fmt.Errorf("ошибка парсинга боди запроса на получение картинки штрафа: %v Боди: %v", err, string(body))
+		return err
+	}
+	if len(m.Photos) == 0 {
+		err = fmt.Errorf("ошибка получения картинки штрафа Боди: %v", string(body))
 		return err
 	}
 	link := fmt.Sprintf("%v", m.Photos[0].Base64Value)
