@@ -65,7 +65,7 @@ func main() {
 				command := strings.Split(message, " ") //бьем пробелами
 				switch command[0] {                    //Берем первое значение
 
-				case "add":
+				case "рег":
 					reg := strings.Split(command[1], ":")    //Получаем рег данные
 					fullRegnum := reg[0]                     //Полный номер, включая регион
 					regnum := string([]rune(fullRegnum)[:6]) //Первые 6 символов (номер)
@@ -85,6 +85,11 @@ func main() {
 					if err != nil {
 						log.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
+						if err.Error() == "рег данные уже есть" {
+							telegram.SendMessage(fmt.Sprintf("%s", err), chatID)
+						} else {
+							telegram.SendMessage("Не удалось добавить регистрационные данные", chatID)
+						}
 						break
 					}
 					telegram.SendMessage("Debug: Рег данные успешно добавлены", myID)
@@ -94,7 +99,7 @@ func main() {
 Бот находится на этапе разрабоки!
 Контактные данные http://t.me/valentinsemenov
 Для добавления регистрационных данных отправьте:
-add A999AA555:1111111111
+рег A999AA555:1111111111
 Где:
 А999АА          госномер в русской расскладке
 555                 регион
