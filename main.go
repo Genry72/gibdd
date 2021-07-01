@@ -1,11 +1,11 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"gibdd/telegram"
+	"gibdd/utils"
 	"image"
 	"image/jpeg"
 	"io/ioutil"
@@ -28,41 +28,10 @@ func main() {
 	nomer := "Х752ТТ"
 	region := "152"
 	sts := "9933143213"
-	//Создаем базу если ее нет
-	db, err := sql.Open("sqlite3", "./gibdd.db")
+	//Создаем необходимые БД
+	err := utils.AddDB()
 	if err != nil {
-		err = fmt.Errorf("ошибка создания БД:%v", err)
 		log.Fatal(err)
-	}
-	//Создаем таблицу с пользователями
-	usersTab := `
-	CREATE TABLE IF NOT EXISTS users(
-		id    		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
-		name		TEXT,
-		chatID		INTEGER,
-		username	INTEGER,
-		create_date TEXT,
-		navi_date 	TEXT
-	  )
-	`
-	//Создаем таблицу с рег данными
-	regInfoTab := `
-	CREATE TABLE IF NOT EXISTS regInfo(
-		id    		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
-		regnum		TEXT,
-		stsnum		INTEGER,
-		user_id		INTEGER, --Принадлежность пользоватлею
-		create_date TEXT,
-		navi_date 	TEXT
-	  )
-	`
-	_, err = db.Exec(usersTab)
-	if err != nil {
-		log.Fatal("Не удальсь создать таблицу users")
-	}
-	_, err = db.Exec(regInfoTab)
-	if err != nil {
-		log.Fatal("Не удальсь создать таблицу users")
 	}
 	go func() {
 		for {
@@ -108,11 +77,9 @@ add A999AA555:1111111111
 1111111111  Свидетельство о регистрации (СТС)
 `, chatID)
 					//Сразу добавляем пользователя в базу
-					insert := "INSERT INTO users (name, chatID, username, create_date, navi_date) VALUES ($1, $2, $3, $4, $5)"
-					statement, _ := db.Prepare(insert)                                                          //Подготовка вставки
-					_, err = statement.Exec(sender, chatID, username, time.Now().String(), time.Now().String()) //Вставка с параметрами
+					err := utils.AddUser(sender, username, chatID)
 					if err != nil {
-						err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
+						log.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
 					}
 				default:

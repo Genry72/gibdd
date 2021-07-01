@@ -1,0 +1,99 @@
+package utils
+
+import (
+	"database/sql"
+	"fmt"
+	"time"
+)
+
+//Adddb первоначальное создание баз
+func AddDB() (err error) {
+	//Создаем базу если ее нет
+	db, err := sql.Open("sqlite3", "./gibdd.db")
+	if err != nil {
+		err = fmt.Errorf("ошибка создания БД:%v", err)
+		return
+	}
+	defer db.Close()
+	//Создаем таблицу с пользователями
+	usersTab := `
+	CREATE TABLE IF NOT EXISTS users(
+		chatID		INTEGER PRIMARY KEY,
+		name		TEXT,
+		username	INTEGER,
+		create_date TEXT,
+		navi_date 	TEXT
+	  )
+	`
+	//Создаем таблицу с рег данными
+	regInfoTab := `
+	CREATE TABLE IF NOT EXISTS regInfo(
+		id    		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+		regnum		TEXT,
+		stsnum		INTEGER,
+		user_id		INTEGER, --Принадлежность пользоватлею
+		create_date TEXT,
+		navi_date 	TEXT
+	  )
+	`
+	_, err = db.Exec(usersTab)
+	if err != nil {
+		err = fmt.Errorf("не удальсь создать таблицу users")
+		return
+	}
+	_, err = db.Exec(regInfoTab)
+	if err != nil {
+		err = fmt.Errorf("не удальсь создать таблицу regInfo")
+		return
+	}
+	return
+}
+
+//AddUser Добавление пользователя в БД
+func AddUser(sender, username string, chatID int) (err error) {
+	db, err := sql.Open("sqlite3", "./gibdd.db")
+	if err != nil {
+		err = fmt.Errorf("ошибка создания БД:%v", err)
+		return
+	}
+	defer db.Close()
+	//Проверяем существование пользователя
+	est, err := selectFromUsersDB(chatID)
+	if est { //выходим если пользоватлеь есть
+		fmt.Println("Выходим")
+		return
+	}
+	fmt.Println("Создаем")
+	insert := "INSERT INTO users (name, chatID, username, create_date, navi_date) VALUES ($1, $2, $3, $4, $5)"
+	statement, _ := db.Prepare(insert)                                                          //Подготовка вставки
+	fmt.Println(insert)
+	_, err = statement.Exec(sender, chatID, username, time.Now().String(), time.Now().String()) //Вставка с параметрами
+	if err != nil {
+		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
+		return
+	}
+	return
+}
+
+//selectFromUsersDB Проверка существования пользователя в БД
+func selectFromUsersDB(chatID int) (est bool, err error) {
+	est = false
+	db, err := sql.Open("sqlite3", "./gibdd.db")
+	if err != nil {
+		err = fmt.Errorf("ошибка создания БД:%v", err)
+		return
+	}
+	defer db.Close()
+	qwery := fmt.Sprintf("select count (*) from users where chatID = %v", chatID)
+	row := db.QueryRow(qwery)
+	var result string
+	err = row.Scan(&result)
+	if err != nil {
+		err = fmt.Errorf("ошибка выполнения единичного запроса в БД %v: %v", qwery, err)
+		return
+	}
+	if result != "0" {
+		est = true
+	}
+	return
+}
