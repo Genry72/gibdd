@@ -33,6 +33,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	msg := "Я стартанул"
+	log.Println(msg)
+	telegram.SendMessage(msg, myID)
 	go func() {
 		for {
 			//Получаем офсет
@@ -63,8 +66,24 @@ func main() {
 				switch command[0] {                    //Берем первое значение
 
 				case "add":
-					telegram.SendMessage("Добавляем", chatID)
+					reg := strings.Split(command[1], ":")    //Получаем рег данные
+					fullRegnum := reg[0]                     //Полный номер, включая регион
+					regnum := string([]rune(fullRegnum)[:6]) //Первые 6 символов (номер)
+					regreg := string([]rune(fullRegnum)[6:]) //Обрезаем первые 6 символов (регион)
+					stsnum := reg[1]
 
+					//Проверяем валидность на сайте gibdd
+					err := checkShtraf(regnum, regreg, stsnum)
+					if err != nil {
+						log.Println(err)
+						telegram.SendMessage("Debug: Не найдено ТС с таким сочетанием СТС и ГРЗ", myID)
+						telegram.SendMessage("Не найдено ТС с таким сочетанием СТС и ГРЗ", chatID)
+						break
+					}
+					msg := "Данные успешно добавлены"
+					log.Println(msg)
+					telegram.SendMessage("Debug: "+msg, myID)
+					telegram.SendMessage(msg, chatID)
 				case "/start", "/help":
 					telegram.SendMessage(`
 Бот находится на этапе разрабоки!
@@ -89,13 +108,13 @@ add A999AA555:1111111111
 			}
 		}
 	}()
-	// time.Sleep(60 * time.Minute)
+	time.Sleep(60 * time.Minute)
 	err = checkShtraf(nomer, region, sts)
 	if err != nil {
 		err = fmt.Errorf("ошибка при получении штрафов: %v", err)
 		log.Println(err)
 	}
-	time.Sleep(60 * time.Minute)
+	// time.Sleep(60 * time.Minute)
 }
 
 //checkShtraf Функция проверки штрафов
@@ -145,7 +164,8 @@ func checkShtraf(nomer, region, sts string) (err error) {
 		err = linkImage(post, nomer+region, fmt.Sprintf("%v", divid), cafapPicsToken, shtraf.NumPost+".jpeg")
 		if err != nil {
 			err = fmt.Errorf("ошибка получения картинки со штрафом: %v", err)
-			return err
+			log.Println(err)
+			return nil
 		}
 	}
 	// fmt.Println(string(body))
