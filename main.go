@@ -76,14 +76,19 @@ func main() {
 					err := checkShtraf(regnum, regreg, stsnum)
 					if err != nil {
 						log.Println(err)
-						telegram.SendMessage("Debug: Не найдено ТС с таким сочетанием СТС и ГРЗ", myID)
+						telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
 						telegram.SendMessage("Не найдено ТС с таким сочетанием СТС и ГРЗ", chatID)
 						break
 					}
-					msg := "Данные успешно добавлены"
-					log.Println(msg)
-					telegram.SendMessage("Debug: "+msg, myID)
-					telegram.SendMessage(msg, chatID)
+					//Добавляем рег данные в БД
+					err = utils.AddReg(fullRegnum, stsnum, chatID)
+					if err != nil {
+						log.Println(err)
+						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
+						break
+					}
+					telegram.SendMessage("Debug: Рег данные успешно добавлены", myID)
+					telegram.SendMessage("Данные успешно добавлены", chatID)
 				case "/start", "/help":
 					telegram.SendMessage(`
 Бот находится на этапе разрабоки!

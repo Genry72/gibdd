@@ -3,6 +3,7 @@ package utils
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -30,8 +31,8 @@ func AddDB() (err error) {
 	CREATE TABLE IF NOT EXISTS regInfo(
 		id    		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
 		regnum		TEXT,
-		stsnum		INTEGER,
-		user_id		INTEGER, --Принадлежность пользоватлею
+		stsnum		INTEGER UNIQUE,
+		chatID		INTEGER, --Принадлежность пользоватлею
 		create_date TEXT,
 		navi_date 	TEXT
 	  )
@@ -58,25 +59,52 @@ func AddUser(sender, username string, chatID int) (err error) {
 	}
 	defer db.Close()
 	//Проверяем существование пользователя
-	est, err := selectFromUsersDB(chatID)
+	est, err := checkZnachDB("users", "chatID", fmt.Sprintf("%v", chatID))
 	if est { //выходим если пользоватлеь есть
-		fmt.Println("Выходим")
+		fmt.Println("Пользоватлель уже есть")
 		return
 	}
-	fmt.Println("Создаем")
+	log.Printf("Добавляем пользователя %v", username)
 	insert := "INSERT INTO users (name, chatID, username, create_date, navi_date) VALUES ($1, $2, $3, $4, $5)"
 	statement, _ := db.Prepare(insert)                                                          //Подготовка вставки
-	fmt.Println(insert)
 	_, err = statement.Exec(sender, chatID, username, time.Now().String(), time.Now().String()) //Вставка с параметрами
 	if err != nil {
 		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
 		return
 	}
+	log.Printf("Пользователь %v добавлен в БД", username)
 	return
 }
 
-//selectFromUsersDB Проверка существования пользователя в БД
-func selectFromUsersDB(chatID int) (est bool, err error) {
+//AddReg Добавление регистрационные данные в БД
+func AddReg(regnum, stsnum string, chatID int) (err error) {
+	db, err := sql.Open("sqlite3", "./gibdd.db")
+	if err != nil {
+		err = fmt.Errorf("ошибка создания БД:%v", err)
+		return
+	}
+	defer db.Close()
+	//Проверяем существование регданных по СТС
+	est, err := checkZnachDB("reginfo", "stsnum", stsnum)
+	if est { //выходим если пользоватлеь есть
+		
+		fmt.Println("Рег данные уже есть")
+		return
+	}
+	log.Println("Добавляем рег данные")
+	insert := "INSERT INTO reginfo (regnum, stsnum, chatID, create_date, navi_date) VALUES ($1, $2, $3, $4, $5)"
+	statement, _ := db.Prepare(insert) //Подготовка вставки
+	_, err = statement.Exec(regnum, stsnum, fmt.Sprintf("%v", chatID), time.Now().String(), time.Now().String()) //Вставка с параметрами
+	if err != nil {
+		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
+		return
+	}
+	log.Println("Рег данные успешно добавлены")
+	return
+}
+
+//checkZnachDB Проверка существование записи в БД
+func checkZnachDB(tableName, znachName, znach string) (est bool, err error) {
 	est = false
 	db, err := sql.Open("sqlite3", "./gibdd.db")
 	if err != nil {
@@ -84,7 +112,7 @@ func selectFromUsersDB(chatID int) (est bool, err error) {
 		return
 	}
 	defer db.Close()
-	qwery := fmt.Sprintf("select count (*) from users where chatID = %v", chatID)
+	qwery := fmt.Sprintf("select count (*) from %v where %v = %v", tableName, znachName, znach)
 	row := db.QueryRow(qwery)
 	var result string
 	err = row.Scan(&result)
