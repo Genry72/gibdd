@@ -16,23 +16,15 @@ func AddDB() (err error) {
 		return
 	}
 	defer db.Close()
-	//Создаем таблицу с пользователями
+	//Создаем таблицу со всеми данными
 	usersTab := `
 	CREATE TABLE IF NOT EXISTS users(
-		chatID		INTEGER PRIMARY KEY,
-		name		TEXT,
-		username	INTEGER,
-		create_date TEXT,
-		navi_date 	TEXT
-	  )
-	`
-	//Создаем таблицу с рег данными
-	regInfoTab := `
-	CREATE TABLE IF NOT EXISTS regInfo(
 		id    		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+		chatID		INTEGER,
+		name		TEXT,
+		username	TEXT,
 		regnum		TEXT,
 		stsnum		INTEGER UNIQUE,
-		chatID		INTEGER, --Принадлежность пользоватлею
 		create_date TEXT,
 		navi_date 	TEXT
 	  )
@@ -40,11 +32,6 @@ func AddDB() (err error) {
 	_, err = db.Exec(usersTab)
 	if err != nil {
 		err = fmt.Errorf("не удальсь создать таблицу users")
-		return
-	}
-	_, err = db.Exec(regInfoTab)
-	if err != nil {
-		err = fmt.Errorf("не удальсь создать таблицу regInfo")
 		return
 	}
 	return
@@ -87,13 +74,13 @@ func AddReg(regnum, stsnum string, chatID int) (err error) {
 	//Проверяем существование регданных по СТС
 	est, err := checkZnachDB("reginfo", "stsnum", stsnum)
 	if est { //выходим если пользоватлеь есть
-		
+
 		fmt.Println("Рег данные уже есть")
 		return
 	}
 	log.Println("Добавляем рег данные")
 	insert := "INSERT INTO reginfo (regnum, stsnum, chatID, create_date, navi_date) VALUES ($1, $2, $3, $4, $5)"
-	statement, _ := db.Prepare(insert) //Подготовка вставки
+	statement, _ := db.Prepare(insert)                                                                           //Подготовка вставки
 	_, err = statement.Exec(regnum, stsnum, fmt.Sprintf("%v", chatID), time.Now().String(), time.Now().String()) //Вставка с параметрами
 	if err != nil {
 		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
