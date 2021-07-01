@@ -31,7 +31,7 @@ func AddDB() (err error) {
 	CREATE TABLE IF NOT EXISTS regInfo(
 		id    		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
 		regnum		TEXT,
-		stsnum		INTEGER UNIQUE,
+		stsnum		INTEGER,
 		chatID		INTEGER, --Принадлежность пользоватлею
 		create_date TEXT,
 		navi_date 	TEXT
@@ -85,9 +85,9 @@ func AddReg(regnum, stsnum string, chatID int) (err error) {
 	}
 	defer db.Close()
 	//Проверяем существование регданных по СТС
-	est, err := checkZnachDB("reginfo", "stsnum", stsnum)
+	est, err := chechReg(stsnum, fmt.Sprint(chatID))
 	if est { //выходим если пользоватлеь есть
-		
+		err = fmt.Errorf("рег данные уже есть")
 		fmt.Println("Рег данные уже есть")
 		return
 	}
@@ -113,6 +113,29 @@ func checkZnachDB(tableName, znachName, znach string) (est bool, err error) {
 	}
 	defer db.Close()
 	qwery := fmt.Sprintf("select count (*) from %v where %v = %v", tableName, znachName, znach)
+	row := db.QueryRow(qwery)
+	var result string
+	err = row.Scan(&result)
+	if err != nil {
+		err = fmt.Errorf("ошибка выполнения единичного запроса в БД %v: %v", qwery, err)
+		return
+	}
+	if result != "0" {
+		est = true
+	}
+	return
+}
+
+//chechUser Проверка существование рег данных в БД
+func chechReg(stsNum, chatID string) (est bool, err error) {
+	est = false
+	db, err := sql.Open("sqlite3", "./gibdd.db")
+	if err != nil {
+		err = fmt.Errorf("ошибка создания БД:%v", err)
+		return
+	}
+	defer db.Close()
+	qwery := fmt.Sprintf("select count (*) from reginfo where stsNum = %v and chatID = %v", stsNum, chatID)
 	row := db.QueryRow(qwery)
 	var result string
 	err = row.Scan(&result)
