@@ -63,13 +63,13 @@ func main() {
 				telegram.SendMessage(fmt.Sprintf("Debug: Получено сообщение от пользователя %v chatID:%v username:%v с текстом: %v", sender, chatID, username, message), myID) //Все сообщения боту для дебага мне
 
 				command := strings.Split(message, " ") //бьем пробелами
-				switch strings.ToUpper(command[0]) {                    //Берем первое значение
+				switch strings.ToUpper(command[0]) {   //Берем первое значение
 
 				case "РЕГ":
-					reg := strings.Split(strings.ToUpper(command[1]), ":")    //Получаем рег данные
-					fullRegnum := reg[0]                     //Полный номер, включая регион
-					regnum := string([]rune(fullRegnum)[:6]) //Первые 6 символов (номер)
-					regreg := string([]rune(fullRegnum)[6:]) //Обрезаем первые 6 символов (регион)
+					reg := strings.Split(strings.ToUpper(command[1]), ":") //Получаем рег данные
+					fullRegnum := reg[0]                                   //Полный номер, включая регион
+					regnum := string([]rune(fullRegnum)[:6])               //Первые 6 символов (номер)
+					regreg := string([]rune(fullRegnum)[6:])               //Обрезаем первые 6 символов (регион)
 					stsnum := reg[1]
 
 					//Проверяем валидность на сайте gibdd
