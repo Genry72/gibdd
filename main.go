@@ -25,9 +25,9 @@ func main() {
 		err := fmt.Errorf("не задан myID")
 		log.Fatal(err)
 	}
-	nomer := "Х752ТТ"
-	region := "152"
-	sts := "9933143213"
+	// nomer := "Х752ТТ"
+	// region := "152"
+	// sts := "9933143213"
 	//Создаем необходимые БД
 	err := utils.AddDB()
 	if err != nil {
@@ -73,7 +73,7 @@ func main() {
 					stsnum := reg[1]
 
 					//Проверяем валидность на сайте gibdd
-					err := checkShtraf(regnum, regreg, stsnum)
+					_, err := checkShtraf(regnum, regreg, stsnum)
 					if err != nil {
 						log.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
@@ -119,68 +119,100 @@ func main() {
 			}
 		}
 	}()
-	time.Sleep(60 * time.Minute)
-	err = checkShtraf(nomer, region, sts)
-	if err != nil {
-		err = fmt.Errorf("ошибка при получении штрафов: %v", err)
-		log.Println(err)
+	// time.Sleep(60 * time.Minute)
+	for {
+		func() {
+			//Получаем мапу с данными для проверки штрафов
+			mapa, err := utils.Getreg()
+			if err != nil {
+				msg := fmt.Sprint("Debug: ошибка получения мапы: %v", err)
+				telegram.SendMessage(msg, myID)
+				log.Println(msg)
+				return
+			}
+			//Вызываем проверку
+			for _, regs := range mapa {
+				chatID := regs[0]
+				fullRegnum := regs[1]                    //Полный номер, включая регион
+				nomer := string([]rune(fullRegnum)[:6])  //Первые 6 символов (номер)
+				region := string([]rune(fullRegnum)[6:]) //Обрезаем первые 6 символов (регион)
+				sts := regs[2]
+
+				shtrafs, err := checkShtraf(nomer, region, sts)
+				if err != nil {
+					err = fmt.Errorf("ошибка при получении штрафов: %v", err)
+					log.Println(err)
+				}
+				for _, shtrafString := range shtrafs {
+					telegram.SendMessage(fmt.Sprintf("Debug: %v", shtrafString), myID)
+					id, _ := strconv.Atoi(chatID)
+					telegram.SendMessage(shtrafString, id)
+				}
+				// time.Sleep(5 * time.Minute)
+			}
+		}()
+		time.Sleep(5 * time.Minute)
 	}
+
 	// time.Sleep(60 * time.Minute)
 }
 
 //checkShtraf Функция проверки штрафов
-func checkShtraf(nomer, region, sts string) (err error) {
+func checkShtraf(nomer, region, sts string) (shtrafs []string, err error) {
 	url := "https://check.gibdd.ru/proxy/check/fines"
 	method := "POST"
 	payload := strings.NewReader("regnum=" + nomer + "&regreg=" + region + "&stsnum=" + sts)
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
-		return err
+		return
 	}
 	req.Header.Add("Accept", "application/json, text/javascript, */*; q=0.01")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 	res, err := client.Do(req)
 	if err != nil {
-		return err
+		return
 	}
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return
 	}
 	if res.StatusCode != 200 {
 		err = fmt.Errorf("выполнение запроса %v завершиблось ошибкой %v: %v", url, res.Status, string(body))
-		return err
+		return
 	}
 	m := shtrafStrukt{}
 	err = json.Unmarshal(body, &m)
 	if err != nil {
 		err = fmt.Errorf("ошибка парсинга боди запроса на получение списка штрафов: %v Боди: %v", err, string(body))
-		return err
+		return
 	}
 	var post string
 	var divid int
 	if m.Code != 200 {
 		err = fmt.Errorf("выполнение запроса %v завершиблось ошибкой %v: %v", url, m.Message, string(body))
-		return err
+		return
 	}
 	cafapPicsToken := m.CafapPicsToken
 	for _, shtraf := range m.Data {
 		dateNarush := shtraf.DateDecis
-		fmt.Printf("Штраф на сумму %vр, со скидкой можно опатить до %v\n", shtraf.Summa, shtraf.DateDiscount)
-		fmt.Printf("Дата нарушения %v\n", dateNarush)
+		// fmt.Printf("Штраф на сумму %vр, со скидкой можно опатить до %v\n", shtraf.Summa, shtraf.DateDiscount)
+		// fmt.Printf("Дата нарушения %v\n", dateNarush)
+		shtrafString := fmt.Sprintf("Штраф на сумму %vр, со скидкой можно опатить до %v\n", shtraf.Summa, shtraf.DateDiscount)
+		shtrafString = shtrafString + fmt.Sprintf("Дата нарушения %v\n", dateNarush)
+		shtrafs = append(shtrafs, shtrafString)
 		post = shtraf.NumPost
 		divid = shtraf.Division
 		err = linkImage(post, nomer+region, fmt.Sprintf("%v", divid), cafapPicsToken, shtraf.NumPost+".jpeg")
 		if err != nil {
 			err = fmt.Errorf("ошибка получения картинки со штрафом: %v", err)
 			log.Println(err)
-			return nil
+			return shtrafs, nil
 		}
 	}
 	// fmt.Println(string(body))
-	return err
+	return
 }
 
 //linkImage Получаем ссылку на картинку
