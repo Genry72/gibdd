@@ -93,7 +93,7 @@ func AddReg(regnum, stsnum string, chatID int) (err error) {
 	}
 	log.Println("Добавляем рег данные")
 	insert := "INSERT INTO reginfo (regnum, stsnum, chatID, create_date, navi_date) VALUES ($1, $2, $3, $4, $5)"
-	statement, _ := db.Prepare(insert) //Подготовка вставки
+	statement, _ := db.Prepare(insert)                                                                           //Подготовка вставки
 	_, err = statement.Exec(regnum, stsnum, fmt.Sprintf("%v", chatID), time.Now().String(), time.Now().String()) //Вставка с параметрами
 	if err != nil {
 		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
