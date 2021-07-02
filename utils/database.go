@@ -148,3 +148,35 @@ func chechReg(stsNum, chatID string) (est bool, err error) {
 	}
 	return
 }
+
+//Getreg Возвращает мапу с данными для получения штрафов
+func Getreg() (mapa map[int][]string, err error) {
+
+	db, err := sql.Open("sqlite3", "./gibdd.db")
+	if err != nil {
+		err = fmt.Errorf("ошибка создания БД:%v", err)
+		log.Fatal(err)
+		return
+	}
+
+	defer db.Close()
+
+	rows, err := db.Query("SELECT id, chatID, regnum, stsnum FROM reginfo")
+	if err != nil {
+		log.Fatal(err)
+	}
+	var id int
+	var chatID string
+	var regnum string
+	var stsnum string
+	checkMap := make(map[int][]string) //Мапа для проверки штрафов по всем рег данным
+	for rows.Next() {
+		err = rows.Scan(&id, &chatID, &regnum, &stsnum)
+		if err != nil {
+			log.Fatal(err)
+		}
+		checkMap[id] = []string{chatID, regnum, stsnum}
+	}
+	mapa = checkMap
+	return
+}
