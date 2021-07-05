@@ -88,7 +88,6 @@ func AddReg(regnum, stsnum string, chatID int) (err error) {
 	est, err := chechReg(stsnum, fmt.Sprint(chatID))
 	if est { //выходим если пользоватлеь есть
 		err = fmt.Errorf("рег данные уже есть")
-		fmt.Println("Рег данные уже есть")
 		return
 	}
 	log.Println("Добавляем рег данные")
@@ -186,7 +185,6 @@ func AddEvent(regnum, stsnum string, chatID int) (err error) {
 	//Для начала проверяем существование рег данных и доюбавляем, в случае отсутствия
 	err = AddReg(regnum, stsnum, chatID)
 	if err != nil {
-		log.Println(err)
 		return
 	}
 	db, err := sql.Open("sqlite3", "./gibdd.db")
