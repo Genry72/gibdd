@@ -212,7 +212,8 @@ func getShtrafs(nomer, region, sts string) (shtrafs []string, err error) {
 		dateNarush := shtraf.DateDecis
 		// fmt.Printf("Штраф на сумму %vр, со скидкой можно опатить до %v\n", shtraf.Summa, shtraf.DateDiscount)
 		// fmt.Printf("Дата нарушения %v\n", dateNarush)
-		shtrafString := fmt.Sprintf("Штраф на сумму %vр, со скидкой можно опатить до %v\n", shtraf.Summa, shtraf.DateDiscount)
+		shtrafString := fmt.Sprintf("Штраф на сумму %vр\n", shtraf.Summa)
+		shtrafString = shtrafString + fmt.Sprintf("Оплата со скидкой до %v\n", shtraf.DateDiscount)
 		shtrafString = shtrafString + fmt.Sprintf("Дата нарушения %v\n", dateNarush)
 		shtrafString = shtrafString + fmt.Sprintf("Адрес: %v\n", m.Divisions[shtraf.Division]["fulladdr"])
 		shtrafs = append(shtrafs, shtrafString)
@@ -222,6 +223,8 @@ func getShtrafs(nomer, region, sts string) (shtrafs []string, err error) {
 		if err != nil {
 			err = fmt.Errorf("ошибка получения картинки со штрафом: %v", err)
 			log.Println(err)
+			shtrafString = shtrafString + "Фото штрафа не загружено"
+			shtrafs = append(shtrafs, shtrafString)
 			return shtrafs, nil
 		}
 	}
