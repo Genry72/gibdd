@@ -34,7 +34,7 @@ func AddDB() (err error) {
 		stsnum		INTEGER,
 		chatID		INTEGER, --Принадлежность пользоватлею
 		create_date TEXT,
-		navi_date 	TEXT
+		event_date 	TEXT -- Дата отправки уведомления пользователю
 	  )
 	`
 	_, err = db.Exec(usersTab)
@@ -92,9 +92,9 @@ func AddReg(regnum, stsnum string, chatID int) (err error) {
 		return
 	}
 	log.Println("Добавляем рег данные")
-	insert := "INSERT INTO reginfo (regnum, stsnum, chatID, create_date, navi_date) VALUES ($1, $2, $3, $4, $5)"
+	insert := "INSERT INTO reginfo (regnum, stsnum, chatID, create_date) VALUES ($1, $2, $3, $4)"
 	statement, _ := db.Prepare(insert)                                                                           //Подготовка вставки
-	_, err = statement.Exec(regnum, stsnum, fmt.Sprintf("%v", chatID), time.Now().String(), time.Now().String()) //Вставка с параметрами
+	_, err = statement.Exec(regnum, stsnum, fmt.Sprintf("%v", chatID), time.Now().String()) //Вставка с параметрами
 	if err != nil {
 		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
 		return
@@ -161,7 +161,7 @@ func Getreg() (mapa map[int][]string, err error) {
 
 	defer db.Close()
 
-	rows, err := db.Query("SELECT id, chatID, regnum, stsnum FROM reginfo")
+	rows, err := db.Query("SELECT id, chatID, regnum, stsnum FROM reginfo where event_date is null")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -178,5 +178,26 @@ func Getreg() (mapa map[int][]string, err error) {
 		checkMap[id] = []string{chatID, regnum, stsnum}
 	}
 	mapa = checkMap
+	return
+}
+
+//AddEvent Добавляем дату отправки уведомления
+func AddEvent(regnum, stsnum string, chatID int) (err error) {
+	db, err := sql.Open("sqlite3", "./gibdd.db")
+	if err != nil {
+		err = fmt.Errorf("ошибка создания БД:%v", err)
+		return
+	}
+	defer db.Close()
+
+	log.Println("Добавляем дату отправки уведомления")
+	insert := "update reginfo set event_date=? where regnum=? and stsnum=? and chatID=?"
+	statement, _ := db.Prepare(insert)                                                                           //Подготовка вставки
+	_, err = statement.Exec(time.Now().String(), regnum, stsnum, fmt.Sprintf("%v", chatID), ) //Вставка с параметрами
+	if err != nil {
+		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
+		return
+	}
+	log.Println("Рег данные успешно обновлены")
 	return
 }

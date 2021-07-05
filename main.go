@@ -161,8 +161,14 @@ func main() {
 					id, _ := strconv.Atoi(chatID)
 					telegram.SendMessage(shtrafString, id)
 				}
-				// time.Sleep(5 * time.Minute)
+				id, _ := strconv.Atoi(chatID)
+				err = utils.AddEvent(fullRegnum, sts, id)
+				if err != nil {
+					log.Println(err)
+					telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
+				}
 			}
+
 		}()
 		time.Sleep(5 * time.Minute)
 	}
