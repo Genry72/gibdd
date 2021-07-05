@@ -170,8 +170,9 @@ func main() {
 }
 
 //checkShtraf Функция получения мапы со штрафами
-func getShtrafs(nomer, region, sts string) (shtrafs []string, err error) {
+func getShtrafs(nomer, region, sts string, chatID int) (shtrafs []string, err error) {
 	log.Println("Получаем мапу со штрафами")
+	myID, _ := strconv.Atoi(os.Getenv("myIDtelega"))
 	url := "https://check.gibdd.ru/proxy/check/fines"
 	method := "POST"
 	payload := strings.NewReader("regnum=" + nomer + "&regreg=" + region + "&stsnum=" + sts)
@@ -216,7 +217,7 @@ func getShtrafs(nomer, region, sts string) (shtrafs []string, err error) {
 		shtrafString = shtrafString + fmt.Sprintf("Оплата со скидкой до %v\n", shtraf.DateDiscount)
 		shtrafString = shtrafString + fmt.Sprintf("Дата нарушения %v\n", dateNarush)
 		shtrafString = shtrafString + fmt.Sprintf("Адрес: %v\n", m.Divisions[shtraf.Division]["fulladdr"])
-		shtrafs = append(shtrafs, shtrafString)
+
 		post = shtraf.NumPost
 		divid = shtraf.Division
 		err = linkImage(post, nomer+region, fmt.Sprintf("%v", divid), cafapPicsToken, shtraf.NumPost+".jpeg")
@@ -227,6 +228,10 @@ func getShtrafs(nomer, region, sts string) (shtrafs []string, err error) {
 			shtrafs = append(shtrafs, shtrafString)
 			return shtrafs, nil
 		}
+		// shtrafs = append(shtrafs, shtrafString)
+		telegram.SendPhoto(shtraf.NumPost+".jpeg", "Debug: "+shtrafString, myID)
+		telegram.SendPhoto(shtraf.NumPost+".jpeg", shtrafString, chatID)
+		os.Remove("./" + shtraf.NumPost + ".jpeg")
 	}
 	// fmt.Println(string(body))
 	log.Println("Мапа со штрафами получена")
@@ -241,7 +246,7 @@ func checkShtraf(nomer, region, sts, chatID, fullRegnum string, myID int) (err e
 	if err != nil {
 		return
 	}
-	shtrafs, err := getShtrafs(nomer, region, sts)
+	shtrafs, err := getShtrafs(nomer, region, sts, id)
 	if err != nil {
 		err = fmt.Errorf("ошибка при получении штрафов: %v", err)
 		return
@@ -336,15 +341,15 @@ type shtrafStrukt struct {
 		SupplierBillID string `json:"SupplierBillID"`
 		DatePost       string `json:"DatePost"`
 	} `json:"data"`
-	EndDate        string `json:"endDate"`
-	CafapPicsToken string `json:"cafapPicsToken"`
-	Message        string `json:"message"`
+	EndDate        string                         `json:"endDate"`
+	CafapPicsToken string                         `json:"cafapPicsToken"`
+	Message        string                         `json:"message"`
 	Divisions      map[int]map[string]interface{} `json:"divisions"`
-	RequestTime string `json:"requestTime"`
-	Duration    int    `json:"duration"`
-	Hostname    string `json:"hostname"`
-	MessageReg  string `json:"messageReg"`
-	StartDate   string `json:"startDate"`
+	RequestTime    string                         `json:"requestTime"`
+	Duration       int                            `json:"duration"`
+	Hostname       string                         `json:"hostname"`
+	MessageReg     string                         `json:"messageReg"`
+	StartDate      string                         `json:"startDate"`
 }
 
 type linkImageStruct struct {
