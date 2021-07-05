@@ -79,7 +79,7 @@ func main() {
 					stsnum := reg[1]
 
 					//Проверяем валидность на сайте gibdd
-					_, err = checkShtraf(regnum, regreg, stsnum)
+					err = checkShtraf(regnum, regreg, stsnum, fmt.Sprint(chatID), fullRegnum, myID)
 					if err != nil {
 						log.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
@@ -87,17 +87,17 @@ func main() {
 						break
 					}
 					//Добавляем рег данные в БД
-					err = utils.AddReg(fullRegnum, stsnum, chatID)
-					if err != nil {
-						log.Println(err)
-						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
-						if err.Error() == "рег данные уже есть" {
-							telegram.SendMessage(fmt.Sprintf("%s", err), chatID)
-						} else {
-							telegram.SendMessage("Не удалось добавить регистрационные данные", chatID)
-						}
-						break
-					}
+					// err = utils.AddReg(fullRegnum, stsnum, chatID)
+					// if err != nil {
+					// 	log.Println(err)
+					// 	telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
+					// 	if err.Error() == "рег данные уже есть" {
+					// 		telegram.SendMessage(fmt.Sprintf("%s", err), chatID)
+					// 	} else {
+					// 		telegram.SendMessage("Не удалось добавить регистрационные данные", chatID)
+					// 	}
+					// 	break
+					// }
 					telegram.SendMessage("Debug: Рег данные успешно добавлены", myID)
 					telegram.SendMessage("Данные успешно добавлены", chatID)
 				case "/START", "/HELP":
@@ -151,18 +151,7 @@ func main() {
 				region := string([]rune(fullRegnum)[6:]) //Обрезаем первые 6 символов (регион)
 				sts := regs[2]
 
-				shtrafs, err := checkShtraf(nomer, region, sts)
-				if err != nil {
-					err = fmt.Errorf("ошибка при получении штрафов: %v", err)
-					log.Println(err)
-				}
-				for _, shtrafString := range shtrafs {
-					telegram.SendMessage(fmt.Sprintf("Debug: %v", shtrafString), myID)
-					id, _ := strconv.Atoi(chatID)
-					telegram.SendMessage(shtrafString, id)
-				}
-				id, _ := strconv.Atoi(chatID)
-				err = utils.AddEvent(fullRegnum, sts, id)
+				err = checkShtraf(nomer, region, sts, chatID, fullRegnum, myID)
 				if err != nil {
 					log.Println(err)
 					telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
@@ -176,8 +165,9 @@ func main() {
 	// time.Sleep(60 * time.Minute)
 }
 
-//checkShtraf Функция проверки штрафов
-func checkShtraf(nomer, region, sts string) (shtrafs []string, err error) {
+//checkShtraf Функция получения мапы со штрафами
+func getShtrafs(nomer, region, sts string) (shtrafs []string, err error) {
+	log.Println("Получаем мапу со штрафами")
 	url := "https://check.gibdd.ru/proxy/check/fines"
 	method := "POST"
 	payload := strings.NewReader("regnum=" + nomer + "&regreg=" + region + "&stsnum=" + sts)
@@ -231,6 +221,29 @@ func checkShtraf(nomer, region, sts string) (shtrafs []string, err error) {
 		}
 	}
 	// fmt.Println(string(body))
+	log.Println("Мапа со штрафами получена")
+	return
+}
+
+//checkShtraf выводим штрафы
+func checkShtraf(nomer, region, sts, chatID, fullRegnum string, myID int) (err error) {
+	log.Println("Проверяем штрафы")
+	shtrafs, err := getShtrafs(nomer, region, sts)
+	if err != nil {
+		err = fmt.Errorf("ошибка при получении штрафов: %v", err)
+		return
+	}
+	for _, shtrafString := range shtrafs {
+		telegram.SendMessage(fmt.Sprintf("Debug: %v", shtrafString), myID)
+		id, _ := strconv.Atoi(chatID)
+		telegram.SendMessage(shtrafString, id)
+	}
+	id, _ := strconv.Atoi(chatID)
+	err = utils.AddEvent(fullRegnum, sts, id)
+	if err != nil {
+		return
+	}
+	log.Println("Штрафы получены")
 	return
 }
 

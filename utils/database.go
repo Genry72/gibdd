@@ -93,7 +93,7 @@ func AddReg(regnum, stsnum string, chatID int) (err error) {
 	}
 	log.Println("Добавляем рег данные")
 	insert := "INSERT INTO reginfo (regnum, stsnum, chatID, create_date) VALUES ($1, $2, $3, $4)"
-	statement, _ := db.Prepare(insert)                                                                           //Подготовка вставки
+	statement, _ := db.Prepare(insert)                                                      //Подготовка вставки
 	_, err = statement.Exec(regnum, stsnum, fmt.Sprintf("%v", chatID), time.Now().String()) //Вставка с параметрами
 	if err != nil {
 		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
@@ -183,6 +183,12 @@ func Getreg() (mapa map[int][]string, err error) {
 
 //AddEvent Добавляем дату отправки уведомления
 func AddEvent(regnum, stsnum string, chatID int) (err error) {
+	//Для начала проверяем существование рег данных и доюбавляем, в случае отсутствия
+	err = AddReg(regnum, stsnum, chatID)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 	db, err := sql.Open("sqlite3", "./gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
@@ -192,8 +198,8 @@ func AddEvent(regnum, stsnum string, chatID int) (err error) {
 
 	log.Println("Добавляем дату отправки уведомления")
 	insert := "update reginfo set event_date=? where regnum=? and stsnum=? and chatID=?"
-	statement, _ := db.Prepare(insert)                                                                           //Подготовка вставки
-	_, err = statement.Exec(time.Now().String(), regnum, stsnum, fmt.Sprintf("%v", chatID), ) //Вставка с параметрами
+	statement, _ := db.Prepare(insert)                                                      //Подготовка вставки
+	_, err = statement.Exec(time.Now().String(), regnum, stsnum, fmt.Sprintf("%v", chatID)) //Вставка с параметрами
 	if err != nil {
 		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
 		return
