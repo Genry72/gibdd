@@ -125,7 +125,7 @@ func main() {
 			//Получаем мапу с данными для проверки штрафов
 			mapa, err := utils.Getreg()
 			if err != nil {
-				msg := fmt.Sprint("Debug: ошибка получения мапы: %v", err)
+				msg := fmt.Sprintf("Debug: ошибка получения мапы: %v", err)
 				telegram.SendMessage(msg, myID)
 				log.Println(msg)
 				return
