@@ -83,7 +83,11 @@ func main() {
 					if err != nil {
 						log.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
-						telegram.SendMessage("Не найдено ТС с таким сочетанием СТС и ГРЗ", chatID)
+						if err.Error() == "рег данные уже есть" {
+							telegram.SendMessage(fmt.Sprintf("%s", err), chatID)
+						} else {
+							telegram.SendMessage("Не найдено ТС с таким сочетанием СТС и ГРЗ", chatID)
+						}
 						break
 					}
 					//Добавляем рег данные в БД
