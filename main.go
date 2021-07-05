@@ -214,6 +214,7 @@ func getShtrafs(nomer, region, sts string) (shtrafs []string, err error) {
 		// fmt.Printf("Дата нарушения %v\n", dateNarush)
 		shtrafString := fmt.Sprintf("Штраф на сумму %vр, со скидкой можно опатить до %v\n", shtraf.Summa, shtraf.DateDiscount)
 		shtrafString = shtrafString + fmt.Sprintf("Дата нарушения %v\n", dateNarush)
+		shtrafString = shtrafString + fmt.Sprintf("Адрес: %v\n", m.Divisions[shtraf.Division]["fulladdr"])
 		shtrafs = append(shtrafs, shtrafString)
 		post = shtraf.NumPost
 		divid = shtraf.Division
@@ -335,18 +336,7 @@ type shtrafStrukt struct {
 	EndDate        string `json:"endDate"`
 	CafapPicsToken string `json:"cafapPicsToken"`
 	Message        string `json:"message"`
-	Divisions      struct {
-		Num1109800 struct {
-			Regkod   string        `json:"regkod"`
-			Activity []interface{} `json:"activity"`
-			Name     string        `json:"name"`
-			SiteID   int           `json:"siteId"`
-			Active   bool          `json:"active"`
-			Fulladdr string        `json:"fulladdr"`
-			DivID    int           `json:"divId"`
-			Coords   string        `json:"coords"`
-		} `json:"1109800"`
-	} `json:"divisions"`
+	Divisions      map[int]map[string]interface{} `json:"divisions"`
 	RequestTime string `json:"requestTime"`
 	Duration    int    `json:"duration"`
 	Hostname    string `json:"hostname"`
