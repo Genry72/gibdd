@@ -232,6 +232,11 @@ func getShtrafs(nomer, region, sts string) (shtrafs []string, err error) {
 //checkShtraf выводим штрафы
 func checkShtraf(nomer, region, sts, chatID, fullRegnum string, myID int) (err error) {
 	log.Println("Проверяем штрафы")
+	id, _ := strconv.Atoi(chatID)
+	err = utils.AddEvent(fullRegnum, sts, id)
+	if err != nil {
+		return
+	}
 	shtrafs, err := getShtrafs(nomer, region, sts)
 	if err != nil {
 		err = fmt.Errorf("ошибка при получении штрафов: %v", err)
@@ -241,11 +246,6 @@ func checkShtraf(nomer, region, sts, chatID, fullRegnum string, myID int) (err e
 		telegram.SendMessage(fmt.Sprintf("Debug: %v", shtrafString), myID)
 		id, _ := strconv.Atoi(chatID)
 		telegram.SendMessage(shtrafString, id)
-	}
-	id, _ := strconv.Atoi(chatID)
-	err = utils.AddEvent(fullRegnum, sts, id)
-	if err != nil {
-		return
 	}
 	log.Println("Штрафы получены")
 	return
