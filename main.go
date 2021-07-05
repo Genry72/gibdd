@@ -256,7 +256,9 @@ func linkImage(post, regnum, divid, cafapPicsToken, filename string) (err error)
 	url := "https://check.gibdd.ru/proxy/check/fines/pics"
 	method := "POST"
 	payload := strings.NewReader("post=" + post + "&regnum=" + regnum + "&divid=" + divid + "&cafapPicsToken=" + cafapPicsToken)
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
 		return err
