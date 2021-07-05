@@ -66,6 +66,12 @@ func main() {
 				switch strings.ToUpper(command[0]) {   //Берем первое значение
 
 				case "РЕГ":
+					//Сразу добавляем пользователя в базу
+					err := utils.AddUser(sender, username, chatID)
+					if err != nil {
+						log.Println(err)
+						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
+					}
 					reg := strings.Split(strings.ToUpper(command[1]), ":") //Получаем рег данные
 					fullRegnum := reg[0]                                   //Полный номер, включая регион
 					regnum := string([]rune(fullRegnum)[:6])               //Первые 6 символов (номер)
@@ -73,7 +79,7 @@ func main() {
 					stsnum := reg[1]
 
 					//Проверяем валидность на сайте gibdd
-					_, err := checkShtraf(regnum, regreg, stsnum)
+					_, err = checkShtraf(regnum, regreg, stsnum)
 					if err != nil {
 						log.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
@@ -112,6 +118,12 @@ func main() {
 						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
 					}
 				default:
+					//Сразу добавляем пользователя в базу
+					err := utils.AddUser(sender, username, chatID)
+					if err != nil {
+						log.Println(err)
+						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
+					}
 					telegram.SendMessage("Debug: Не корректная команда, наберите /help для справки", myID)
 					telegram.SendMessage("Не корректная команда, наберите /help для справки", chatID)
 				}
@@ -120,6 +132,7 @@ func main() {
 		}
 	}()
 	// time.Sleep(60 * time.Minute)
+	//Проверяем штрафы
 	for {
 		func() {
 			//Получаем мапу с данными для проверки штрафов
