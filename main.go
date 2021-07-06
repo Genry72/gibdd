@@ -79,7 +79,7 @@ func main() {
 					stsnum := reg[1]
 
 					//Проверяем валидность на сайте gibdd
-					err = checkShtraf(regnum, regreg, stsnum, fmt.Sprint(chatID), fullRegnum, myID)
+					err = checkShtraf(regnum, regreg, stsnum, fmt.Sprint(chatID), fullRegnum, myID, false)
 					if err != nil {
 						log.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
@@ -121,6 +121,8 @@ func main() {
 						log.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
 					}
+				case "/CHECK":
+					printShtraf(myID, true, chatID)
 				default:
 					//Сразу добавляем пользователя в базу
 					err := utils.AddUser(sender, username, chatID)
@@ -138,35 +140,43 @@ func main() {
 	// time.Sleep(60 * time.Minute)
 	//Проверяем штрафы
 	for {
-		func() {
-			//Получаем мапу с данными для проверки штрафов
-			mapa, err := utils.Getreg()
-			if err != nil {
-				msg := fmt.Sprintf("Debug: ошибка получения мапы: %v", err)
-				telegram.SendMessage(msg, myID)
-				log.Println(msg)
-				return
-			}
-			//Вызываем проверку
-			for _, regs := range mapa {
-				chatID := regs[0]
-				fullRegnum := regs[1]                    //Полный номер, включая регион
-				nomer := string([]rune(fullRegnum)[:6])  //Первые 6 символов (номер)
-				region := string([]rune(fullRegnum)[6:]) //Обрезаем первые 6 символов (регион)
-				sts := regs[2]
-
-				err = checkShtraf(nomer, region, sts, chatID, fullRegnum, myID)
-				if err != nil {
-					log.Println(err)
-					telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
-				}
-			}
-
-		}()
+		printShtraf(myID, false, 0)
 		time.Sleep(5 * time.Minute)
 	}
 
 	// time.Sleep(60 * time.Minute)
+}
+
+//printShtraf Печатаем штрафы в телегу
+func printShtraf(myID int, check bool, currentChatID int) {
+	//Получаем мапу с данными для проверки штрафов
+	mapa, err := utils.Getreg(check)
+	if err != nil {
+		msg := fmt.Sprintf("Debug: ошибка получения мапы: %v", err)
+		telegram.SendMessage(msg, myID)
+		log.Println(msg)
+		return
+	}
+	//Вызываем проверку
+	for _, regs := range mapa {
+		chatID := regs[0]
+		if check {
+			if chatID != fmt.Sprint(currentChatID) {
+				continue
+			}
+		}
+		fullRegnum := regs[1]                    //Полный номер, включая регион
+		nomer := string([]rune(fullRegnum)[:6])  //Первые 6 символов (номер)
+		region := string([]rune(fullRegnum)[6:]) //Обрезаем первые 6 символов (регион)
+		sts := regs[2]
+
+		err = checkShtraf(nomer, region, sts, chatID, fullRegnum, myID, check)
+		if err != nil {
+			log.Println(err)
+			telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
+		}
+	}
+
 }
 
 //checkShtraf Функция получения мапы со штрафами
@@ -193,7 +203,7 @@ func getShtrafs(nomer, region, sts string, chatID int) (shtrafs []string, err er
 		return
 	}
 	if res.StatusCode != 200 {
-		err = fmt.Errorf("выполнение запроса %v завершиблось ошибкой %v: %v", url, res.Status, string(body))
+		err = fmt.Errorf("выполнение запроса %v %v завершиблось ошибкой %v: %v", url, payload, res.Status, string(body))
 		return
 	}
 	m := shtrafStrukt{}
@@ -205,7 +215,7 @@ func getShtrafs(nomer, region, sts string, chatID int) (shtrafs []string, err er
 	var post string
 	var divid int
 	if m.Code != 200 {
-		err = fmt.Errorf("выполнение запроса %v завершиблось ошибкой %v: %v", url, m.Message, string(body))
+		err = fmt.Errorf("выполнение запроса %v %v завершиблось ошибкой %v: %v", url, payload, m.Message, string(body))
 		return
 	}
 	cafapPicsToken := m.CafapPicsToken
@@ -239,16 +249,16 @@ func getShtrafs(nomer, region, sts string, chatID int) (shtrafs []string, err er
 }
 
 //checkShtraf выводим штрафы
-func checkShtraf(nomer, region, sts, chatID, fullRegnum string, myID int) (err error) {
+func checkShtraf(nomer, region, sts, chatID, fullRegnum string, myID int, check bool) (err error) {
 	log.Println("Проверяем штрафы")
 	id, _ := strconv.Atoi(chatID)
-	err = utils.AddEvent(fullRegnum, sts, id)
-	if err != nil {
-		return
-	}
 	shtrafs, err := getShtrafs(nomer, region, sts, id)
 	if err != nil {
 		err = fmt.Errorf("ошибка при получении штрафов: %v", err)
+		return
+	}
+	err = utils.AddEvent(fullRegnum, sts, id, check)
+	if err != nil {
 		return
 	}
 	for _, shtrafString := range shtrafs {

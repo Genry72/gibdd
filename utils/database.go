@@ -77,7 +77,7 @@ func AddUser(sender, username string, chatID int) (err error) {
 }
 
 //AddReg Добавление регистрационные данные в БД
-func AddReg(regnum, stsnum string, chatID int) (err error) {
+func AddReg(regnum, stsnum string, chatID int, check bool) (err error) {
 	db, err := sql.Open("sqlite3", "./gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
@@ -87,7 +87,9 @@ func AddReg(regnum, stsnum string, chatID int) (err error) {
 	//Проверяем существование регданных по СТС
 	est, err := chechReg(stsnum, fmt.Sprint(chatID))
 	if est { //выходим если пользоватлеь есть
-		err = fmt.Errorf("рег данные уже есть")
+		if !check { //Выходим с ошибкой только если это проверка по расписанию, а не по запросу
+			err = fmt.Errorf("рег данные уже есть")
+		}
 		return
 	}
 	log.Println("Добавляем рег данные")
@@ -148,8 +150,8 @@ func chechReg(stsNum, chatID string) (est bool, err error) {
 	return
 }
 
-//Getreg Возвращает мапу с данными для получения штрафов
-func Getreg() (mapa map[int][]string, err error) {
+//Getreg Возвращает мапу с данными для получения штрафов check - проверка по запросу или штатная
+func Getreg(check bool) (mapa map[int][]string, err error) {
 
 	db, err := sql.Open("sqlite3", "./gibdd.db")
 	if err != nil {
@@ -159,11 +161,19 @@ func Getreg() (mapa map[int][]string, err error) {
 	}
 
 	defer db.Close()
-
-	rows, err := db.Query("SELECT id, chatID, regnum, stsnum FROM reginfo where event_date is null")
-	if err != nil {
-		log.Fatal(err)
+	var rows *sql.Rows
+	if check { //Проверяем все, без пустых значений
+		rows, err = db.Query("SELECT id, chatID, regnum, stsnum FROM reginfo")
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		rows, err = db.Query("SELECT id, chatID, regnum, stsnum FROM reginfo where event_date is null")
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
+
 	var id int
 	var chatID string
 	var regnum string
@@ -181,9 +191,9 @@ func Getreg() (mapa map[int][]string, err error) {
 }
 
 //AddEvent Добавляем дату отправки уведомления
-func AddEvent(regnum, stsnum string, chatID int) (err error) {
+func AddEvent(regnum, stsnum string, chatID int, check bool) (err error) {
 	//Для начала проверяем существование рег данных и доюбавляем, в случае отсутствия
-	err = AddReg(regnum, stsnum, chatID)
+	err = AddReg(regnum, stsnum, chatID, check)
 	if err != nil {
 		return
 	}
