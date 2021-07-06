@@ -141,7 +141,7 @@ func main() {
 	//Проверяем штрафы
 	for {
 		printShtraf(myID, false, 0)
-		time.Sleep(30 * time.Second)
+		time.Sleep(5 * time.Minute)
 	}
 
 	// time.Sleep(60 * time.Minute)
@@ -183,14 +183,6 @@ func printShtraf(myID int, check bool, currentChatID int) {
 //getShtrafs Функция отправляет штрафы по конкретному пользователю + ПТС
 func getShtrafs(nomer, region, sts string, chatID int, check bool) (err error) {
 	log.Println("Получаем штрафы")
-	//Добавляем рег данные
-	err = utils.AddReg(nomer+region, sts, chatID, check)
-	if err != nil {
-		if err.Error() != "рег данные уже есть" { //Выходим если ошибка отличная от этой
-			return
-		}
-
-	}
 	// var shtrafs []string
 	// myID, _ := strconv.Atoi(os.Getenv("myIDtelega"))
 	url := "https://check.gibdd.ru/proxy/check/fines"
@@ -240,6 +232,14 @@ func getShtrafs(nomer, region, sts string, chatID int, check bool) (err error) {
 
 		post = shtraf.NumPost
 		divid = shtraf.Division
+		//Добавляем рег данные, в случае если запрос выше отработал
+		err = utils.AddReg(nomer+region, sts, chatID, check)
+		if err != nil {
+			if err.Error() != "рег данные уже есть" { //Выходим если ошибка отличная от этой
+				return
+			}
+
+		}
 		//Проверяем, были ли ранее уведомления, в случае, если это проверки по циклу
 		if !check {
 			est, err := utils.СheckEvent(chatID, post)
