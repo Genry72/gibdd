@@ -59,8 +59,8 @@ func main() {
 					offset = newOffset
 					continue
 				}
-				log.Printf("Получено сообщение от пользователя %v chatID:%v username:%v с текстом: %v", sender, chatID, username, message)
-				telegram.SendMessage(fmt.Sprintf("Debug: Получено сообщение от пользователя %v chatID:%v username:%v с текстом: %v", sender, chatID, username, message), myID) //Все сообщения боту для дебага мне
+				log.Printf("Получено сообщение от пользователя %v chatID:%v http://t.me/%v с текстом: %v", sender, chatID, username, message)
+				telegram.SendMessage(fmt.Sprintf("Debug: Получено сообщение от пользователя %v chatID:%v http://t.me/%v с текстом: %v", sender, chatID, username, message), myID) //Все сообщения боту для дебага мне
 
 				command := strings.Split(message, " ") //бьем пробелами
 				switch strings.ToUpper(command[0]) {   //Берем первое значение
@@ -213,7 +213,7 @@ func getShtrafs(nomer, region, sts string, chatID int) (shtrafs []string, err er
 		dateNarush := shtraf.DateDecis
 		// fmt.Printf("Штраф на сумму %vр, со скидкой можно опатить до %v\n", shtraf.Summa, shtraf.DateDiscount)
 		// fmt.Printf("Дата нарушения %v\n", dateNarush)
-		shtrafString := fmt.Sprintf("Штраф на сумму %vр\n", shtraf.Summa)
+		shtrafString := fmt.Sprintf("❗Штраф на сумму %vр\n", shtraf.Summa)
 		shtrafString = shtrafString + fmt.Sprintf("Оплата со скидкой до %v\n", shtraf.DateDiscount)
 		shtrafString = shtrafString + fmt.Sprintf("Дата нарушения %v\n", dateNarush)
 		shtrafString = shtrafString + fmt.Sprintf("Адрес: %v\n", m.Divisions[shtraf.Division]["fulladdr"])
