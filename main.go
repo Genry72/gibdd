@@ -18,7 +18,8 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 )
-
+//тоду
+//При выполнении на пустой базе РЕГ х752тт152:9933143213 возвращается "рег данные уже есть"
 func main() {
 	myID, _ := strconv.Atoi(os.Getenv("myIDtelega"))
 	if myID == 0 {
