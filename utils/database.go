@@ -33,18 +33,31 @@ func AddDB() (err error) {
 		regnum		TEXT,
 		stsnum		INTEGER,
 		chatID		INTEGER, --Принадлежность пользоватлею
-		create_date TEXT,
-		event_date 	TEXT -- Дата отправки уведомления пользователю
+		create_date TEXT
+	  )
+	`
+	//Создаем таблицу с информацией об отправленных уведомлениях
+	events := `
+	CREATE TABLE IF NOT EXISTS events(
+		id    		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+		chatID		INTEGER, --Принадлежность пользоватлею
+		numberPost  TEXT, --номер постановления
+		create_date TEXT
 	  )
 	`
 	_, err = db.Exec(usersTab)
 	if err != nil {
-		err = fmt.Errorf("не удальсь создать таблицу users")
+		err = fmt.Errorf("не удальсь создать таблицу users: %v", err)
 		return
 	}
 	_, err = db.Exec(regInfoTab)
 	if err != nil {
-		err = fmt.Errorf("не удальсь создать таблицу regInfo")
+		err = fmt.Errorf("не удальсь создать таблицу regInfo: %v", err)
+		return
+	}
+	_, err = db.Exec(events)
+	if err != nil {
+		err = fmt.Errorf("не удальсь создать таблицу events: %v", err)
 		return
 	}
 	return
@@ -84,7 +97,7 @@ func AddReg(regnum, stsnum string, chatID int, check bool) (err error) {
 		return
 	}
 	defer db.Close()
-	//Проверяем существование регданных по СТС
+	//Проверяем существование регданных по СТС и chatID
 	est, err := chechReg(stsnum, fmt.Sprint(chatID))
 	if est { //выходим если пользоватлеь есть
 		if !check { //Выходим с ошибкой только если это проверка по расписанию, а не по запросу
@@ -151,7 +164,7 @@ func chechReg(stsNum, chatID string) (est bool, err error) {
 }
 
 //Getreg Возвращает мапу с данными для получения штрафов check - проверка по запросу или штатная
-func Getreg(check bool) (mapa map[int][]string, err error) {
+func Getreg() (mapa map[int][]string, err error) {
 
 	db, err := sql.Open("sqlite3", "./gibdd.db")
 	if err != nil {
@@ -161,17 +174,9 @@ func Getreg(check bool) (mapa map[int][]string, err error) {
 	}
 
 	defer db.Close()
-	var rows *sql.Rows
-	if check { //Проверяем все, без пустых значений
-		rows, err = db.Query("SELECT id, chatID, regnum, stsnum FROM reginfo")
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		rows, err = db.Query("SELECT id, chatID, regnum, stsnum FROM reginfo where event_date is null")
-		if err != nil {
-			log.Fatal(err)
-		}
+	rows, err := db.Query("SELECT id, chatID, regnum, stsnum FROM reginfo")
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	var id int
@@ -191,27 +196,54 @@ func Getreg(check bool) (mapa map[int][]string, err error) {
 }
 
 //AddEvent Добавляем дату отправки уведомления
-func AddEvent(regnum, stsnum string, chatID int, check bool) (err error) {
-	//Для начала проверяем существование рег данных и доюбавляем, в случае отсутствия
-	err = AddReg(regnum, stsnum, chatID, check)
-	if err != nil {
-		return
-	}
+func AddEvent(chatID int, numberPost string) (err error) {
 	db, err := sql.Open("sqlite3", "./gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
 		return
 	}
 	defer db.Close()
-
+	//Перед вставкой, проверяем наличие записи
+	est, err := СheckEvent(chatID, numberPost)
+	if err != nil {
+		return
+	}
+	if est {
+		log.Println("Уведомление уже было")
+		return
+	}
 	log.Println("Добавляем дату отправки уведомления")
-	insert := "update reginfo set event_date=? where regnum=? and stsnum=? and chatID=?"
-	statement, _ := db.Prepare(insert)                                                      //Подготовка вставки
-	_, err = statement.Exec(time.Now().String(), regnum, stsnum, fmt.Sprintf("%v", chatID)) //Вставка с параметрами
+	insert := "INSERT INTO events (chatID, numberPost, create_date) VALUES (?, ?, ?)"
+	statement, _ := db.Prepare(insert)                               //Подготовка вставки
+	_, err = statement.Exec(chatID, numberPost, time.Now().String()) //Вставка с параметрами
 	if err != nil {
 		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
 		return
 	}
-	log.Println("Рег данные успешно обновлены")
+	log.Println("Добавлена дата отправки уведомления")
+	return
+}
+
+//checkEvent проверяет наличие уведомления в БД
+func СheckEvent(chatID int, numberPost string) (est bool, err error) {
+	est = false
+	db, err := sql.Open("sqlite3", "./gibdd.db")
+	if err != nil {
+		err = fmt.Errorf("ошибка создания БД:%v", err)
+		return
+	}
+	defer db.Close()
+	qwery := fmt.Sprintf("select count (*) from events where chatID = %v and numberPost = \"%v\"", chatID, numberPost)
+	fmt.Println(qwery)
+	row := db.QueryRow(qwery)
+	var result string
+	err = row.Scan(&result)
+	if err != nil {
+		err = fmt.Errorf("ошибка выполнения единичного запроса в БД %v: %v", qwery, err)
+		return
+	}
+	if result != "0" {
+		est = true
+	}
 	return
 }
