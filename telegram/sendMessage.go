@@ -61,10 +61,10 @@ func SendMessage(message string, chatid int) {
 }
 
 //SendPhoto отправка фото
-func SendPhoto(photoName, message string, chatid int) {
+func SendPhoto(photoName, message string, chatid int) (err error) {
 	token := os.Getenv("telegaGibddToken")
 	if token == "" {
-		err := fmt.Errorf("не задан токен")
+		err = fmt.Errorf("не задан токен")
 		log.Println(err)
 		return
 	}
@@ -77,24 +77,24 @@ func SendPhoto(photoName, message string, chatid int) {
 	file, errFile2 := os.Open("./" + photoName)
 	if errFile2 != nil {
 		log.Println(errFile2)
-		return
+		return errFile2
 	}
 	defer file.Close()
 	part2, errFile2 := writer.CreateFormFile("photo", filepath.Base("./"+photoName))
 	if errFile2 != nil {
 		log.Println(errFile2)
-		return
+		return errFile2
 	}
 	_, errFile2 = io.Copy(part2, file)
 	if errFile2 != nil {
 		log.Println(errFile2)
-		return
+		return errFile2
 	}
 	_ = writer.WriteField("caption", message)
-	err := writer.Close()
+	err = writer.Close()
 	if err != nil {
 		fmt.Println(err)
-		return
+		return errFile2
 	}
 
 	client := &http.Client{}
@@ -134,6 +134,7 @@ func SendPhoto(photoName, message string, chatid int) {
 		log.Println(err)
 		return
 	}
+	return
 }
 
 type sendMsgTelegaStruct struct {
