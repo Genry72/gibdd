@@ -73,6 +73,10 @@ func AddUser(sender, username string, chatID int) (err error) {
 	defer db.Close()
 	//Проверяем существование пользователя
 	est, err := checkZnachDB("users", "chatID", fmt.Sprintf("%v", chatID))
+	if err != nil {
+		err = fmt.Errorf("ошибка получения данных по пользователю из БД %v", err)
+		return
+	}
 	if est { //выходим если пользоватлеь есть
 		fmt.Println("Пользоватлель уже есть")
 		return
