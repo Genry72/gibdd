@@ -230,7 +230,7 @@ func getShtrafs(nomer, region, sts string, chatID int) (shtrafs []string, err er
 
 		post = shtraf.NumPost
 		divid = shtraf.Division
-		err = linkImage(post, nomer+region, fmt.Sprintf("%v", divid), cafapPicsToken, shtraf.NumPost+".jpeg")
+		countPhoto, err := linkImage(post, nomer+region, fmt.Sprintf("%v", divid), cafapPicsToken, shtraf.NumPost+".jpeg")
 		if err != nil {
 			err = fmt.Errorf("ошибка получения картинки со штрафом: %v", err)
 			log.Println(err)
@@ -239,9 +239,15 @@ func getShtrafs(nomer, region, sts string, chatID int) (shtrafs []string, err er
 			return shtrafs, nil
 		}
 		// shtrafs = append(shtrafs, shtrafString)
-		telegram.SendPhoto(shtraf.NumPost+".jpeg", "Debug: "+shtrafString, myID)
-		telegram.SendPhoto(shtraf.NumPost+".jpeg", shtrafString, chatID)
-		os.Remove("./" + shtraf.NumPost + ".jpeg")
+		for i := 0; i < countPhoto; i++ {
+			var msg string
+			if i == countPhoto-1 {
+				msg = shtrafString
+			}
+			telegram.SendPhoto(fmt.Sprint(i)+shtraf.NumPost+".jpeg", "Debug: "+msg, myID)
+			telegram.SendPhoto(fmt.Sprint(i)+shtraf.NumPost+".jpeg", msg, chatID)
+			os.Remove("./" + fmt.Sprint(i) + shtraf.NumPost + ".jpeg")
+		}
 	}
 	// fmt.Println(string(body))
 	log.Println("Мапа со штрафами получена")
@@ -271,7 +277,7 @@ func checkShtraf(nomer, region, sts, chatID, fullRegnum string, myID int, check 
 }
 
 //linkImage Получаем ссылку на картинку
-func linkImage(post, regnum, divid, cafapPicsToken, filename string) (err error) {
+func linkImage(post, regnum, divid, cafapPicsToken, filename string) (countPhoto int, err error) {
 	url := "https://check.gibdd.ru/proxy/check/fines/pics"
 	method := "POST"
 	payload := strings.NewReader("post=" + post + "&regnum=" + regnum + "&divid=" + divid + "&cafapPicsToken=" + cafapPicsToken)
@@ -280,36 +286,39 @@ func linkImage(post, regnum, divid, cafapPicsToken, filename string) (err error)
 	}
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
-		return err
+		return
 	}
 	req.Header.Add("Accept", "application/json, text/javascript, */*; q=0.01")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 	res, err := client.Do(req)
 	if err != nil {
-		return err
+		return
 	}
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return
 	}
 	if res.StatusCode != 200 {
 		err = fmt.Errorf("выполнение запроса %v завершиблось ошибкой %v: %v", url, res.Status, string(body))
-		return err
+		return
 	}
 	m := linkImageStruct{}
 	err = json.Unmarshal(body, &m)
 	if err != nil {
 		err = fmt.Errorf("ошибка парсинга боди запроса на получение картинки штрафа: %v Боди: %v", err, string(body))
-		return err
+		return
 	}
 	if len(m.Photos) == 0 {
 		err = fmt.Errorf("нет урла штрафа: %v", string(body))
-		return err
+		return
 	}
-	link := fmt.Sprintf("%v", m.Photos[0].Base64Value)
-	err = base64toJpg("./"+filename, link)
-	return err
+	countPhoto = len(m.Photos)
+	for i := 0; i < countPhoto; i++ {
+		link := fmt.Sprintf("%v", m.Photos[i].Base64Value)
+		err = base64toJpg("./"+fmt.Sprint(i)+filename, link)
+	}
+	return
 }
 
 func base64toJpg(filepath, data string) (err error) {
