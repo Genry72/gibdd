@@ -14,10 +14,10 @@ import (
 	"strings"
 )
 
-func SendMessage(message string, chatid int) {
+func SendMessage(message string, chatid int) (err error) {
 	token := os.Getenv("telegaGibddToken")
 	if token == "" {
-		err := fmt.Errorf("не задан токен")
+		err = fmt.Errorf("не задан токен")
 		log.Println(err)
 		return
 	}
@@ -58,6 +58,7 @@ func SendMessage(message string, chatid int) {
 		log.Println(err)
 		return
 	}
+	return
 }
 
 //SendPhoto отправка фото
