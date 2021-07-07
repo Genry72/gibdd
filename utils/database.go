@@ -78,7 +78,7 @@ func AddUser(sender, username string, chatID int) (err error) {
 		return
 	}
 	if est { //выходим если пользоватлеь есть
-		fmt.Println("Пользоватлель уже есть")
+		log.Println("Пользоватлель уже есть")
 		return
 	}
 	log.Printf("Добавляем пользователя %v", username)
@@ -94,22 +94,33 @@ func AddUser(sender, username string, chatID int) (err error) {
 }
 
 //AddReg Добавление регистрационные данные в БД
-func AddReg(regnum, stsnum string, chatID int, check bool) (err error) {
+func AddReg(regnum, regreg, stsnum string, chatID int) (err error) {
 	db, err := sql.Open("sqlite3", "./gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
 		return
 	}
 	defer db.Close()
-	//Проверяем существование регданных по СТС и chatID
+	//Проверяем наличие регданных в БД
 	est, err := chechReg(stsnum, fmt.Sprint(chatID))
-	if est { //выходим если пользоватлеь есть
+	if err != nil {
 		return
 	}
+	if est { //выходим если рег данные есть в БД
+		err = fmt.Errorf("регистрационные данные были добавлены ранее")
+		return
+	}
+
+	//Проверяем валидность данных на сайте gibdd
+	err = СheckRegNum(regnum, regreg, stsnum)
+	if err != nil {
+		return
+	}
+
 	log.Println("Добавляем рег данные")
 	insert := "INSERT INTO reginfo (regnum, stsnum, chatID, create_date) VALUES ($1, $2, $3, $4)"
 	statement, _ := db.Prepare(insert)                                                      //Подготовка вставки
-	_, err = statement.Exec(regnum, stsnum, fmt.Sprintf("%v", chatID), time.Now().String()) //Вставка с параметрами
+	_, err = statement.Exec(regnum+regreg, stsnum, fmt.Sprintf("%v", chatID), time.Now().String()) //Вставка с параметрами
 	if err != nil {
 		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
 		return
