@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"gibdd/telegram"
 	"gibdd/utils"
@@ -26,6 +27,18 @@ func main() {
 	if myID == 0 {
 		err := fmt.Errorf("не задан myID")
 		log.Fatal(err)
+	}
+	token := os.Getenv("telegaGibddToken")
+	if token == "" {
+		err := fmt.Errorf("не задан токен")
+		log.Fatal(err)
+	}
+	var c string
+	flag.StringVar(&c, "c", "", "команда")
+	flag.Parse()
+	if c == "docker" {
+		utils.Docker()
+		return
 	}
 	//Создаем необходимые БД
 	err := utils.AddDB()
