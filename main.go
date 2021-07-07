@@ -20,7 +20,7 @@ import (
 )
 
 //тоду
-//
+//Добавить колонку с временем, до какого числа можно оплатить со скидкой и реализовать функцию по уведомлению заранее.
 func main() {
 	myID, _ := strconv.Atoi(os.Getenv("myIDtelega"))
 	if myID == 0 {
@@ -143,7 +143,7 @@ func main() {
 	//Проверяем штрафы
 	for {
 		printShtraf(myID, false, 0)
-		time.Sleep(5 * time.Minute)
+		time.Sleep(30 * time.Second)
 	}
 
 	// time.Sleep(60 * time.Minute)
