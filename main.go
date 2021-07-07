@@ -85,7 +85,7 @@ func main() {
 					if err != nil {
 						log.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
-						if err.Error() == "рег данные уже есть" {
+						if err.Error() == "рег данные уже есть" || strings.Contains(err.Error(), "Штрафов по госномеру") == true {
 							telegram.SendMessage(fmt.Sprintf("%s", err), chatID)
 						} else {
 							telegram.SendMessage("Не найдено ТС с таким сочетанием СТС и ГРЗ", chatID)
@@ -177,6 +177,14 @@ func printShtraf(myID int, check bool, currentChatID int) {
 		if err != nil {
 			log.Println(err)
 			telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
+			if err.Error() == "рег данные уже есть" || strings.Contains(err.Error(), "Штрафов по госномеру") == true {
+				telegram.SendMessage(err.Error(), id)
+			} else {
+				if check { //При вызове проверки по запросу, возвращаем ошибку
+					err = fmt.Errorf("Ошибка получения штрафа, попробуйте позднее")
+					telegram.SendMessage(err.Error(), id)
+				}
+			}
 		}
 	}
 
@@ -230,6 +238,12 @@ func getShtrafs(nomer, region, sts string, chatID int, check bool) (err error) {
 		}
 
 	}
+	if check {
+		if len(m.Data) == 0 {
+			err = fmt.Errorf("Штрафов по госномеру %v%v нет", nomer, region)
+			return
+		}
+	}
 	cafapPicsToken := m.CafapPicsToken
 	for _, shtraf := range m.Data {
 		dateNarush := shtraf.DateDecis
@@ -260,9 +274,15 @@ func getShtrafs(nomer, region, sts string, chatID int, check bool) (err error) {
 			shtrafString = shtrafString + "Фото штрафа не загружено"
 			// shtrafs = append(shtrafs, shtrafString)
 		}
-		// shtrafs = append(shtrafs, shtrafString)
-		var errSend = false //Если хотябы одна картинка не отправилась, то считаем что уведомление не ушло
-		for i := 0; i < countPhoto; i++ {
+		var errSend = false  //Если хотябы одна картинка не отправилась, то считаем что уведомление не ушло
+		if countPhoto == 0 { //Если фото нет, либо не прогрузились, отправляем как есть
+			err = telegram.SendMessage(shtrafString, chatID)
+			if err != nil {
+				log.Printf("ошибка отправки фото: %v", err)
+				errSend = true //не будем добавлять инфу об отправке в БД
+			}
+		}
+		for i := 0; i < countPhoto; i++ { //Отправояем по одной фотке, к последней прикрепляем текст
 			var msg string
 			if i == countPhoto-1 {
 				msg = shtrafString
