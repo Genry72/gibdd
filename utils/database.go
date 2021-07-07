@@ -104,9 +104,6 @@ func AddReg(regnum, stsnum string, chatID int, check bool) (err error) {
 	//Проверяем существование регданных по СТС и chatID
 	est, err := chechReg(stsnum, fmt.Sprint(chatID))
 	if est { //выходим если пользоватлеь есть
-		if !check { //Выходим с ошибкой только если это проверка по расписанию, а не по запросу
-			err = fmt.Errorf("рег данные уже есть")
-		}
 		return
 	}
 	log.Println("Добавляем рег данные")
