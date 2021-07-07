@@ -18,8 +18,9 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 )
+
 //тоду
-//При выполнении на пустой базе РЕГ х752тт152:9933143213 возвращается "рег данные уже есть"
+//
 func main() {
 	myID, _ := strconv.Atoi(os.Getenv("myIDtelega"))
 	if myID == 0 {
@@ -221,6 +222,14 @@ func getShtrafs(nomer, region, sts string, chatID int, check bool) (err error) {
 		err = fmt.Errorf("выполнение запроса %v %v завершиблось ошибкой %v: %v", url, payload, m.Message, string(body))
 		return
 	}
+	//Добавляем рег данные, в случае если запрос выше отработал
+	err = utils.AddReg(nomer+region, sts, chatID, check)
+	if err != nil {
+		if err.Error() != "рег данные уже есть" { //Выходим если ошибка отличная от этой
+			return
+		}
+
+	}
 	cafapPicsToken := m.CafapPicsToken
 	for _, shtraf := range m.Data {
 		dateNarush := shtraf.DateDecis
@@ -233,14 +242,6 @@ func getShtrafs(nomer, region, sts string, chatID int, check bool) (err error) {
 
 		post = shtraf.NumPost
 		divid = shtraf.Division
-		//Добавляем рег данные, в случае если запрос выше отработал
-		err = utils.AddReg(nomer+region, sts, chatID, check)
-		if err != nil {
-			if err.Error() != "рег данные уже есть" { //Выходим если ошибка отличная от этой
-				return
-			}
-
-		}
 		//Проверяем, были ли ранее уведомления, в случае, если это проверки по циклу
 		if !check {
 			est, err := utils.СheckEvent(chatID, post)
