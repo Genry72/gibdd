@@ -164,7 +164,7 @@ func printShtraf(myID int, check bool, currentChatID int) {
 		chatID := regs[0]
 		id, _ := strconv.Atoi(chatID)
 		if check {
-			if chatID != fmt.Sprint(myID) {
+			if chatID != fmt.Sprint(currentChatID) {
 				continue
 			}
 		}
