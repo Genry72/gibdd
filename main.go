@@ -27,9 +27,6 @@ func main() {
 		err := fmt.Errorf("не задан myID")
 		log.Fatal(err)
 	}
-	// nomer := "Х752ТТ"
-	// region := "152"
-	// sts := "9933143213"
 	//Создаем необходимые БД
 	err := utils.AddDB()
 	if err != nil {
@@ -50,7 +47,7 @@ func main() {
 			if offset == 0 {
 				continue
 			}
-			for {
+			for { //Ловим все сообщения из телеги
 				message, sender, chatID, newOffset, username, err := telegram.Getupdate(offset)
 				if err != nil {
 					log.Printf("Ошибка получения сообщения %v\n", err)
@@ -67,45 +64,43 @@ func main() {
 				command := strings.Split(message, " ") //бьем пробелами
 				switch strings.ToUpper(command[0]) {   //Берем первое значение
 
-				case "РЕГ":
+				case "РЕГ": //Добавление регистрационных данных
 					//Сразу добавляем пользователя в базу
 					err := utils.AddUser(sender, username, chatID)
 					if err != nil {
 						log.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
 					}
-					reg := strings.Split(strings.ToUpper(command[1]), ":") //Получаем рег данные
+					//Добавляем рег данные
+					reg := strings.Split(strings.ToUpper(command[1]), ":") //Получаем рег данные (бьем разделителем)
 					fullRegnum := reg[0]                                   //Полный номер, включая регион
 					regnum := string([]rune(fullRegnum)[:6])               //Первые 6 символов (номер)
 					regreg := string([]rune(fullRegnum)[6:])               //Обрезаем первые 6 символов (регион)
 					stsnum := reg[1]
-
-					//Проверяем валидность на сайте gibdd
-					err = getShtrafs(regnum, regreg, stsnum, chatID, false)
+					err = utils.AddReg(regnum, regreg, stsnum, chatID)
 					if err != nil {
 						log.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
-						if err.Error() == "рег данные уже есть" || strings.Contains(err.Error(), "Штрафов по госномеру") == true {
-							telegram.SendMessage(fmt.Sprintf("%s", err), chatID)
-						} else {
-							telegram.SendMessage("Не найдено ТС с таким сочетанием СТС и ГРЗ", chatID)
-						}
+						telegram.SendMessage(fmt.Sprintf("Упс... %v", err), chatID)
 						break
 					}
-					//Добавляем рег данные в БД
-					// err = utils.AddReg(fullRegnum, stsnum, chatID)
-					// if err != nil {
-					// 	log.Println(err)
-					// 	telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
-					// 	if err.Error() == "рег данные уже есть" {
-					// 		telegram.SendMessage(fmt.Sprintf("%s", err), chatID)
-					// 	} else {
-					// 		telegram.SendMessage("Не удалось добавить регистрационные данные", chatID)
-					// 	}
-					// 	break
-					// }
-					telegram.SendMessage("Debug: Рег данные успешно добавлены", myID)
-					telegram.SendMessage("Данные успешно добавлены", chatID)
+					log.Println("Регистрационные данные успешно добавлены")
+					telegram.SendMessage("Debug: Регистрационные данные успешно добавлены", myID)
+					telegram.SendMessage("Регистрационные данные успешно добавлены", chatID)
+					//После добавления сразу делаем проверку штрафов
+					countShtaf, err := sendShtafs(regnum, regreg, stsnum, chatID, true)
+					if err != nil {
+						log.Println(err)
+						telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
+						telegram.SendMessage(fmt.Sprintf("Упс... %v", err), chatID)
+					}
+					if countShtaf == 0 {
+						telegram.SendMessage(fmt.Sprintf("Debug: ✅ По регистрационному номеру %v штрафов не найдено", fullRegnum), myID)
+						telegram.SendMessage(fmt.Sprintf("✅ По регистрационному номеру %v штрафов не найдено", fullRegnum), chatID)
+						break
+					}
+					telegram.SendMessage(fmt.Sprintf("Debug: ❗️❗️Колличество штрафов по номеру %v: %v", fullRegnum, countShtaf), myID)
+					telegram.SendMessage(fmt.Sprintf("❗️❗️Колличество штрафов по номеру %v: %v", fullRegnum, countShtaf), chatID)
 				case "/START", "/HELP":
 					telegram.SendMessage(`
 Бот находится на этапе разрабоки!
@@ -124,6 +119,12 @@ func main() {
 						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
 					}
 				case "/CHECK":
+					//Сразу добавляем пользователя в базу
+					err := utils.AddUser(sender, username, chatID)
+					if err != nil {
+						log.Println(err)
+						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
+					}
 					printShtraf(myID, true, chatID)
 				default:
 					//Сразу добавляем пользователя в базу
@@ -139,11 +140,10 @@ func main() {
 			}
 		}
 	}()
-	// time.Sleep(60 * time.Minute)
-	//Проверяем штрафы
+	//В бесконечном цикле проверяем штрафы
 	for {
 		printShtraf(myID, false, 0)
-		time.Sleep(30 * time.Second)
+		time.Sleep(5 * time.Minute)
 	}
 
 	// time.Sleep(60 * time.Minute)
@@ -163,7 +163,7 @@ func printShtraf(myID int, check bool, currentChatID int) {
 	for _, regs := range mapa {
 		chatID := regs[0]
 		id, _ := strconv.Atoi(chatID)
-		if check {
+		if check { //При запуске принудительной проверки, проверяем только по своему chatID
 			if chatID != fmt.Sprint(currentChatID) {
 				continue
 			}
@@ -173,25 +173,26 @@ func printShtraf(myID int, check bool, currentChatID int) {
 		region := string([]rune(fullRegnum)[6:]) //Обрезаем первые 6 символов (регион)
 		sts := regs[2]
 
-		err = getShtrafs(nomer, region, sts, id, check)
+		countShtaf, err := sendShtafs(nomer, region, sts, id, check)
 		if err != nil {
 			log.Println(err)
 			telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
-			if err.Error() == "рег данные уже есть" || strings.Contains(err.Error(), "Штрафов по госномеру") == true {
-				telegram.SendMessage(err.Error(), id)
-			} else {
-				if check { //При вызове проверки по запросу, возвращаем ошибку
-					err = fmt.Errorf("Ошибка получения штрафа, попробуйте позднее")
-					telegram.SendMessage(err.Error(), id)
-				}
+		}
+		if check {
+			if countShtaf == 0 {
+				telegram.SendMessage(fmt.Sprintf("Debug: ✅ По регистрационному номеру %v штрафов не найдено", fullRegnum), myID)
+				telegram.SendMessage(fmt.Sprintf("✅ По регистрационному номеру %v штрафов не найдено", fullRegnum), currentChatID)
+				continue
 			}
+			telegram.SendMessage(fmt.Sprintf("Debug: ❗️❗️ Колличество штрафов по номеру %v: %v", fullRegnum, countShtaf), myID)
+			telegram.SendMessage(fmt.Sprintf("❗️❗️ Колличество штрафов по номеру %v: %v", fullRegnum, countShtaf), currentChatID)
 		}
 	}
 
 }
 
-//getShtrafs Функция отправляет штрафы по конкретному пользователю + ПТС
-func getShtrafs(nomer, region, sts string, chatID int, check bool) (err error) {
+//sendShtafs Функция отправляет штрафы по конкретному пользователю + ПТС
+func sendShtafs(nomer, region, sts string, chatID int, check bool) (countShtaf int, err error) {
 	log.Println("Получаем штрафы")
 	// var shtrafs []string
 	// myID, _ := strconv.Atoi(os.Getenv("myIDtelega"))
@@ -215,10 +216,10 @@ func getShtrafs(nomer, region, sts string, chatID int, check bool) (err error) {
 		return
 	}
 	if res.StatusCode != 200 {
-		err = fmt.Errorf("выполнение запроса %v %v завершиблось ошибкой %v: %v", url, payload, res.Status, string(body))
+		err = fmt.Errorf("выполнение запроса %v завершиблось ошибкой %v: %v", url, res.Status, string(body))
 		return
 	}
-	m := shtrafStrukt{}
+	m := utils.ShtrafStrukt{}
 	err = json.Unmarshal(body, &m)
 	if err != nil {
 		err = fmt.Errorf("ошибка парсинга боди запроса на получение списка штрафов: %v Боди: %v", err, string(body))
@@ -227,20 +228,12 @@ func getShtrafs(nomer, region, sts string, chatID int, check bool) (err error) {
 	var post string
 	var divid int
 	if m.Code != 200 {
-		err = fmt.Errorf("выполнение запроса %v %v завершиблось ошибкой %v: %v", url, payload, m.Message, string(body))
+		err = fmt.Errorf("выполнение запроса %v завершиблось ошибкой %v: %v", url, m.Message, string(body))
 		return
 	}
-	//Добавляем рег данные, в случае если запрос выше отработал
-	err = utils.AddReg(nomer+region, sts, chatID, check)
-	if err != nil {
-		if err.Error() != "рег данные уже есть" { //Выходим если ошибка отличная от этой
-			return
-		}
-
-	}
+	countShtaf = len(m.Data)
 	if check {
-		if len(m.Data) == 0 {
-			err = fmt.Errorf("Штрафов по госномеру %v%v нет", nomer, region)
+		if countShtaf == 0 {
 			return
 		}
 	}
@@ -250,6 +243,7 @@ func getShtrafs(nomer, region, sts string, chatID int, check bool) (err error) {
 		// fmt.Printf("Штраф на сумму %vр, со скидкой можно опатить до %v\n", shtraf.Summa, shtraf.DateDiscount)
 		// fmt.Printf("Дата нарушения %v\n", dateNarush)
 		shtrafString := fmt.Sprintf("❗Штраф на сумму %vр\n", shtraf.Summa)
+		shtrafString = shtrafString + fmt.Sprintf("Авто %v %v\n", shtraf.VehicleModel, nomer+region)
 		shtrafString = shtrafString + fmt.Sprintf("Оплата со скидкой до %v\n", shtraf.DateDiscount)
 		shtrafString = shtrafString + fmt.Sprintf("Дата нарушения %v\n", dateNarush)
 		shtrafString = shtrafString + fmt.Sprintf("Адрес: %v\n", m.Divisions[shtraf.Division]["fulladdr"])
@@ -260,7 +254,7 @@ func getShtrafs(nomer, region, sts string, chatID int, check bool) (err error) {
 		if !check {
 			est, err := utils.СheckEvent(chatID, post)
 			if err != nil {
-				return err
+				return countShtaf, err
 			}
 			if est {
 				log.Println("уведомление уже было")
@@ -298,7 +292,7 @@ func getShtrafs(nomer, region, sts string, chatID int, check bool) (err error) {
 		if !errSend { //Если при отправки не было ошибок, то добавляем запись
 			err = utils.AddEvent(chatID, post)
 			if err != nil {
-				return err
+				return countShtaf, err
 			}
 		}
 
@@ -367,38 +361,6 @@ func base64toJpg(filepath, data string) (err error) {
 		return err
 	}
 	return err
-}
-
-type shtrafStrukt struct {
-	DurationReg int    `json:"durationReg"`
-	Request     string `json:"request"`
-	Code        int    `json:"code"`
-	Data        []struct {
-		Discount       string `json:"Discount"`
-		EnableDiscount bool   `json:"enableDiscount"`
-		DateDecis      string `json:"DateDecis"`
-		KoAPcode       string `json:"KoAPcode"`
-		DateDiscount   string `json:"DateDiscount"`
-		VehicleModel   string `json:"VehicleModel"`
-		KoAPtext       string `json:"KoAPtext"`
-		NumPost        string `json:"NumPost"`
-		Kbk            string `json:"kbk"`
-		Summa          int    `json:"Summa"`
-		Division       int    `json:"Division"`
-		EnablePics     bool   `json:"enablePics"`
-		ID             string `json:"id"`
-		SupplierBillID string `json:"SupplierBillID"`
-		DatePost       string `json:"DatePost"`
-	} `json:"data"`
-	EndDate        string                         `json:"endDate"`
-	CafapPicsToken string                         `json:"cafapPicsToken"`
-	Message        string                         `json:"message"`
-	Divisions      map[int]map[string]interface{} `json:"divisions"`
-	RequestTime    string                         `json:"requestTime"`
-	Duration       int                            `json:"duration"`
-	Hostname       string                         `json:"hostname"`
-	MessageReg     string                         `json:"messageReg"`
-	StartDate      string                         `json:"startDate"`
 }
 
 type linkImageStruct struct {
