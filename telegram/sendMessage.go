@@ -16,11 +16,6 @@ import (
 
 func SendMessage(message string, chatid int) (err error) {
 	token := os.Getenv("telegaGibddToken")
-	if token == "" {
-		err = fmt.Errorf("не задан токен")
-		log.Println(err)
-		return
-	}
 	url := "https://api.telegram.org/bot" + token + "/sendMessage"
 	method := "POST"
 	payload := strings.NewReader("chat_id=" + fmt.Sprint(chatid) + "&text=" + message)
