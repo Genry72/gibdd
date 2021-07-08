@@ -14,6 +14,7 @@ func Docker() {
 		// "docker system prune -a -f",
 		"GOOS=linux go build -o ./gibdd ./main.go",
 		"make base",
+		"rm -f ./gibdd", //Удаляем исходинк
 	}
 	// log.Println("Собираем архив")
 	// Собираем архив
