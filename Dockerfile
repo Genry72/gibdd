@@ -1,12 +1,14 @@
 FROM ubuntu:20.04
 WORKDIR /app
 COPY ./gibdd /app
-# RUN apt update &&\
-#     apt install curl -y &&\
-#     curl https://curl.se/ca/cacert.pem -o /etc/pki/trust/anchors/cacert.pem &&\
-#     sudo update-ca-certificates &&\
-#     rm -rf /var/lib/apt/lists/*
-RUN update-ca-certificates
+RUN apt update &&\
+    apt install ca-certificates\
+    curl -y &&\
+    curl https://curl.se/ca/cacert.pem -o ./CERTIFICATE.pem &&\
+    openssl x509 -outform der -in CERTIFICATE.pem -out CERTIFICATE.crt &&\
+    cp CERTIFICATE.crt /usr/local/share/ca-certificate &&\
+    update-ca-certificates -y &&\
+    rm -rf /var/lib/apt/lists/*
 ENTRYPOINT ["./gibdd"]
 # FROM golang:1.15.6 AS build
 # WORKDIR /app
