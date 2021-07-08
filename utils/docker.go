@@ -10,8 +10,8 @@ import (
 func Docker() {
 	commands := []string{//Пока локально. Собираем исходник внутри контейнера. Исполняемый файл запускаем в другом контейнере.
 		"docker rm --force gibdd", //Удаляем контейнер
-		"docker rmi --force gibdd_inage:v1",     //Удаляем изображение
-		"docker system prune -a -f",
+		"docker rmi $(docker images | grep gibdd_image | awk '{print $3}')",     //Удаляем изображение
+		// "docker system prune -a -f",
 		"GOOS=linux go build -o ./gibdd ./main.go",
 		"make base",
 	}
