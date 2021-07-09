@@ -119,7 +119,7 @@ func AddReg(regnum, regreg, stsnum string, chatID int) (err error) {
 
 	log.Println("Добавляем рег данные")
 	insert := "INSERT INTO reginfo (regnum, stsnum, chatID, create_date) VALUES ($1, $2, $3, $4)"
-	statement, _ := db.Prepare(insert)                                                      //Подготовка вставки
+	statement, _ := db.Prepare(insert)                                                             //Подготовка вставки
 	_, err = statement.Exec(regnum+regreg, stsnum, fmt.Sprintf("%v", chatID), time.Now().String()) //Вставка с параметрами
 	if err != nil {
 		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
@@ -246,7 +246,7 @@ func СheckEvent(chatID int, numberPost string) (est bool, err error) {
 	}
 	defer db.Close()
 	qwery := fmt.Sprintf("select count (*) from events where chatID = %v and numberPost = \"%v\"", chatID, numberPost)
-	fmt.Println(qwery)
+	log.Println(qwery)
 	row := db.QueryRow(qwery)
 	var result string
 	err = row.Scan(&result)
