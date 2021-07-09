@@ -8,7 +8,7 @@ import (
 )
 
 func Docker() {
-	commands := []string{//Пока локально. Собираем исходник внутри контейнера. Исполняемый файл запускаем в другом контейнере.
+	commands := []string{//Компилируем исходник внутри контейнера. Исполняемый файл запускаем в другом контейнере.
 		"docker rm --force gibdd", //Удаляем контейнер
 		"docker rmi $(docker images | grep gibdd_image | awk '{print $3}')",     //Удаляем изображение
 		// "docker system prune -a -f",
@@ -16,7 +16,7 @@ func Docker() {
 		"make base",
 		"rm -f ./gibdd", //Удаляем исходинк
 	}
-	// log.Println("Собираем архив")
+
 	// Собираем архив
 	for _, command := range commands {
 		cmd := exec.Command("bash", "-c", command)
