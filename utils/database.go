@@ -10,7 +10,7 @@ import (
 //Adddb первоначальное создание баз
 func AddDB() (err error) {
 	//Создаем базу если ее нет
-	db, err := sql.Open("sqlite3", "./gibdd.db")
+	db, err := sql.Open("sqlite3", "./db/gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
 		return
@@ -65,7 +65,7 @@ func AddDB() (err error) {
 
 //AddUser Добавление пользователя в БД
 func AddUser(sender, username string, chatID int) (err error) {
-	db, err := sql.Open("sqlite3", "./gibdd.db")
+	db, err := sql.Open("sqlite3", "./db/gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
 		return
@@ -95,7 +95,7 @@ func AddUser(sender, username string, chatID int) (err error) {
 
 //AddReg Добавление регистрационные данные в БД
 func AddReg(regnum, regreg, stsnum string, chatID int) (err error) {
-	db, err := sql.Open("sqlite3", "./gibdd.db")
+	db, err := sql.Open("sqlite3", "./db/gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
 		return
@@ -132,7 +132,7 @@ func AddReg(regnum, regreg, stsnum string, chatID int) (err error) {
 //checkZnachDB Проверка существование записи в БД
 func checkZnachDB(tableName, znachName, znach string) (est bool, err error) {
 	est = false
-	db, err := sql.Open("sqlite3", "./gibdd.db")
+	db, err := sql.Open("sqlite3", "./db/gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
 		return
@@ -155,7 +155,7 @@ func checkZnachDB(tableName, znachName, znach string) (est bool, err error) {
 //chechUser Проверка существование рег данных в БД
 func chechReg(stsNum, chatID string) (est bool, err error) {
 	est = false
-	db, err := sql.Open("sqlite3", "./gibdd.db")
+	db, err := sql.Open("sqlite3", "./db/gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
 		return
@@ -178,7 +178,7 @@ func chechReg(stsNum, chatID string) (est bool, err error) {
 //Getreg Возвращает мапу с данными для получения штрафов check - проверка по запросу или штатная
 func Getreg() (mapa map[int][]string, err error) {
 
-	db, err := sql.Open("sqlite3", "./gibdd.db")
+	db, err := sql.Open("sqlite3", "./db/gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
 		log.Fatal(err)
@@ -209,7 +209,7 @@ func Getreg() (mapa map[int][]string, err error) {
 
 //AddEvent Добавляем дату отправки уведомления
 func AddEvent(chatID int, numberPost string) (err error) {
-	db, err := sql.Open("sqlite3", "./gibdd.db")
+	db, err := sql.Open("sqlite3", "./db/gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
 		return
@@ -239,7 +239,7 @@ func AddEvent(chatID int, numberPost string) (err error) {
 //checkEvent проверяет наличие уведомления в БД
 func СheckEvent(chatID int, numberPost string) (est bool, err error) {
 	est = false
-	db, err := sql.Open("sqlite3", "./gibdd.db")
+	db, err := sql.Open("sqlite3", "./db/gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
 		return
