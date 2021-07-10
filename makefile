@@ -27,7 +27,7 @@ up: ## Создание и запуск контейнера
 base: ## Создаем базовый образ на клоне
 	GOOS=linux go build -o ./gibdd ./main.go
 	docker build -f "Dockerfile" -t gibdd_image:v1 "." ##Билдим и запускаем бинарник
-	docker run -d --env-file ./env --name gibdd --restart unless-stopped gibdd_image:v1
+	docker run -d --env-file ./env --name gibdd --restart unless-stopped --mount type=volume,dst=/app/db,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/db gibdd_image:v1
 	echo ОК
 binaryClone: ##Для билда и запуска бинарника
 	docker build -f "clone.Dockerfile" -t health:latest "." ##Собираем healthcheck
