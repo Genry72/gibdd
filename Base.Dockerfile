@@ -1,6 +1,4 @@
 FROM ubuntu:20.04
-WORKDIR /app
-# COPY ./gibdd /app
 RUN apt update &&\
     apt install ca-certificates\
     # iputils-ping \
@@ -11,6 +9,4 @@ RUN apt update &&\
     update-ca-certificates -y &&\
     rm -rf /var/lib/apt/lists/* &&\
     groupadd --gid 2000 node &&\
-    useradd --uid 2000 --gid node --shell /bin/bash --create-home node &&\
-    mkdir db &&\
-    chmod -R 777 /app
+    useradd --uid 2000 --gid node --shell /bin/bash --create-home node
