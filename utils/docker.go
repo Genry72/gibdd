@@ -14,9 +14,9 @@ func Docker(command string) {
 			log.Fatal("Не заданы переменные iidYandex либо passwdYandex")
 		}
 		commands = []string{ //Компилируем исходник внутри контейнера. Исполняемый файл запускаем в другом контейнере.
-			"mkdir ./db",
+			"mkdir -p ./yadisk/sync/gibddBot/",//Создаем папку для диска и БД
+			"chmod -R 777 ./yadisk",
 			"mkdir yandex-disk-config", //Создаем папку с конфигом для подключения к диску
-			"mkdir ./yadisk", //Создаем папку для диска
 			// Собираем конфиг для диска
 			"echo $iidYandex > ./yandex-disk-config/iid",
 			"echo $passwdYandex > ./yandex-disk-config/passwd",
@@ -36,7 +36,6 @@ func Docker(command string) {
 	}
 	if command == "update" {
 		commands = []string{ //Компилируем исходник внутри контейнера. Исполняемый файл запускаем в другом контейнере.
-			"mkdir ./db",
 			"docker rm --force -v gibdd", //Удаляем контейнер
 			"docker rmi $(docker images | grep gibdd_image | awk '{print $3}')", //Удаляем изображение
 			"make update", //обновляем бинарник в базовом образе
