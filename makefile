@@ -24,36 +24,18 @@ up: ## Создание и запуск контейнера
 	docker run -d --name healthCheck -p 2020:2020 --restart unless-stopped health_img:latest
 	docker container prune -f
 	echo ОК
-base: ## Создаем базовый образ на клоне
-	GOOS=linux go build -o ./gibdd ./main.go
-	docker build -f "Dockerfile" -t gibdd_image:v1 "." ##Билдим и запускаем бинарник
+install: ##Создаем базовый образ
+	docker build -f "Base.Dockerfile" -t gibdd_base_image:v1 "." ##Собираем базовый образ
+	GOOS=linux go build -o ./gibdd ./main.go ##Билдим
+	docker build -f "Dockerfile" -t gibdd_image:v1 "." ##Собираем исполняемый образ
 	docker run -d --env-file ./env --name gibdd --restart unless-stopped --mount type=volume,dst=/app/db,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/db gibdd_image:v1
 	echo ОК
-binaryClone: ##Для билда и запуска бинарника
-	docker build -f "clone.Dockerfile" -t health:latest "." ##Собираем healthcheck
-	docker run -d --env-file ./envClone --name healthCheck -p 2020:2020 --restart unless-stopped --hostname $(shell hostname) health:latest ##Запускаем healthcheck
+update: ##Обновляем в базовом образе исходник
+	GOOS=linux go build -o ./gibdd ./main.go ##Билдим
+	docker build -f "Dockerfile" -t gibdd_image:v1 "." ##Собираем исполняемый образ
+	docker run -d --env-file ./env --name gibdd --restart unless-stopped --mount type=volume,dst=/app/db,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/db gibdd_image:v1
 	echo ОК
-start:
-	docker build .
-	docker run test_build:latest --rm -v .:/app
-down:
-	docker-compose -f docker-compose.yml down $(c)
-destroy:
-	docker-compose -f docker-compose.yml down -v $(c)
-stop:
-	docker-compose -f docker-compose.yml stop $(c)
-restart:
-	docker-compose -f docker-compose.yml stop $(c)
-	docker-compose -f docker-compose.yml up -d $(c)
-logs:
-	docker-compose -f docker-compose.yml logs --tail=100 -f $(c)
-logs-api:
-	docker-compose -f docker-compose.yml logs --tail=100 -f api
-ps:
-	docker-compose -f docker-compose.yml ps
-login-timescale:
-	docker-compose -f docker-compose.yml exec timescale /bin/bash
-login-api:
-	docker-compose -f docker-compose.yml exec api /bin/bash
-db-shell:
-	docker-compose -f docker-compose.yml exec timescale psql -Upostgres
+yandexDisk: ##Запускаем yandexDisk для синхронизации бд
+	docker build -f "yandexDisk.Dockerfile" -t yandexdisk_image:v1 "." ##Собираем образ
+	docker run -d --name yandexdisk --restart unless-stopped --mount type=volume,dst=/home/node/.config/yandex-disk,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/yandex-disk yandexdisk_image:v1
+	echo ОК
