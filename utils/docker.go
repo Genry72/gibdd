@@ -28,6 +28,9 @@ func Docker(command string) {
 		}
 	}
 	if command == "yandexDisk" {
+		if os.Getenv("iidYandex") == "" || os.Getenv("passwdYandex") == "" {
+			log.Fatal("Не заданы переменные iidYandex либо passwdYandex")
+		}
 		commands = []string{ //Компилируем исходник внутри контейнера. Исполняемый файл запускаем в другом контейнере.
 			"mkdir yandex-disk-config", //Создаем папку с конфигом для подключения к диску
 			"echo $iidYandex > ./yandex-disk-config/iid",
