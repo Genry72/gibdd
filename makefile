@@ -27,13 +27,13 @@ up: ## Создание и запуск контейнера
 install: ##Создаем базовый образ
 	docker build -f "Base.Dockerfile" -t gibdd_base_image:v1 "." ##Собираем базовый образ
 	docker build -f "yandexDisk.Dockerfile" -t yandexdisk_image:v1 "." ##Собираем образ диска
-	docker run -d --name yandexdisk --restart unless-stopped yandexdisk_image:v1 ##Запускаем диск
+	docker run -d --name yandexdisk --restart unless-stopped --mount type=volume,dst=/yadisk,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/yadisk yandexdisk_image:v1 ##Запускаем диск
 	GOOS=linux go build -o ./gibdd ./main.go ##Билдим
 	docker build -f "Dockerfile" -t gibdd_image:v1 "." ##Собираем исполняемый образ
-	docker run -d --env-file ./env --name gibdd --restart unless-stopped --mount type=volume,dst=/app/db,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/db gibdd_image:v1
+	docker run -d --env-file ./env --name gibdd --restart unless-stopped --mount type=volume,dst=/app/db,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/db --mount type=volume,dst=/app/yadisk,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/yadisk gibdd_image:v1
 	echo ОК
 update: ##Обновляем в базовом образе исходник
 	GOOS=linux go build -o ./gibdd ./main.go ##Билдим
 	docker build -f "Dockerfile" -t gibdd_image:v1 "." ##Собираем исполняемый образ
-	docker run -d --env-file ./env --name gibdd --restart unless-stopped --mount type=volume,dst=/app/db,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/db gibdd_image:v1
+	docker run -d --env-file ./env --name gibdd --restart unless-stopped --mount type=volume,dst=/app/db,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/db --mount type=volume,dst=/app/yadisk,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/yadisk gibdd_image:v1
 	echo ОК

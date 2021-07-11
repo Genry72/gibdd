@@ -16,6 +16,7 @@ func Docker(command string) {
 		commands = []string{ //Компилируем исходник внутри контейнера. Исполняемый файл запускаем в другом контейнере.
 			"mkdir ./db",
 			"mkdir yandex-disk-config", //Создаем папку с конфигом для подключения к диску
+			"mkdir ./yadisk", //Создаем папку для диска
 			// Собираем конфиг для диска
 			"echo $iidYandex > ./yandex-disk-config/iid",
 			"echo $passwdYandex > ./yandex-disk-config/passwd",
