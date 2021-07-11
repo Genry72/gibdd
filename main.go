@@ -49,8 +49,14 @@ func main() {
 		utils.Docker(c)
 		return
 	}
+	//Проверяем готовность диска
+	err := utils.CheckYadisk()
+	if err != nil {
+		telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
+		log.Fatal(err)
+	}
 	//Создаем необходимые БД
-	err := utils.AddDB()
+	err = utils.AddDB()
 	if err != nil {
 		log.Fatal(err)
 	}
