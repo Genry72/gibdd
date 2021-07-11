@@ -37,5 +37,5 @@ update: ##Обновляем в базовом образе исходник
 	echo ОК
 yandexDisk: ##Запускаем yandexDisk для синхронизации бд
 	docker build -f "yandexDisk.Dockerfile" -t yandexdisk_image:v1 "." ##Собираем образ
-	docker run -d --name yandexdisk --restart unless-stopped --mount type=volume,dst=/home/node/.config/yandex-disk,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/yandex-disk yandexdisk_image:v1
+	docker run -d --name yandexdisk --restart unless-stopped --mount type=volume,dst=/home/node/.config/yandex-disk,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/yandex-disk-config yandexdisk_image:v1
 	echo ОК
