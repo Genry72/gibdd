@@ -46,7 +46,7 @@ func Docker(command string) {
 		}
 	}
 
-	// Собираем архив
+	// Выполняем команды
 	for _, command := range commands {
 		cmd := exec.Command("bash", "-c", command)
 		cmd.Stdout = os.Stdout
