@@ -37,8 +37,16 @@ func main() {
 	var c string
 	flag.StringVar(&c, "c", "", "команда")
 	flag.Parse()
-	if c == "docker" {
-		utils.Docker()
+	if c == "install" { //Первичная установка
+		utils.Docker(c)
+		return
+	}
+	if c == "update" { //Первичная установка
+		utils.Docker(c)
+		return
+	}
+	if c == "yandexDisk" { //Первичная установка
+		utils.Docker(c)
 		return
 	}
 	//Создаем необходимые БД
