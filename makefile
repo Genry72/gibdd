@@ -26,6 +26,8 @@ up: ## Создание и запуск контейнера
 	echo ОК
 install: ##Создаем базовый образ
 	docker build -f "Base.Dockerfile" -t gibdd_base_image:v1 "." ##Собираем базовый образ
+	docker build -f "yandexDisk.Dockerfile" -t yandexdisk_image:v1 "." ##Собираем образ диска
+	docker run -d --name yandexdisk --restart unless-stopped --mount type=volume,dst=/home/node/.config/yandex-disk,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/yandex-disk-config yandexdisk_image:v1
 	GOOS=linux go build -o ./gibdd ./main.go ##Билдим
 	docker build -f "Dockerfile" -t gibdd_image:v1 "." ##Собираем исполняемый образ
 	docker run -d --env-file ./env --name gibdd --restart unless-stopped --mount type=volume,dst=/app/db,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/db gibdd_image:v1
@@ -34,8 +36,4 @@ update: ##Обновляем в базовом образе исходник
 	GOOS=linux go build -o ./gibdd ./main.go ##Билдим
 	docker build -f "Dockerfile" -t gibdd_image:v1 "." ##Собираем исполняемый образ
 	docker run -d --env-file ./env --name gibdd --restart unless-stopped --mount type=volume,dst=/app/db,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/db gibdd_image:v1
-	echo ОК
-yandexDisk: ##Запускаем yandexDisk для синхронизации бд
-	docker build -f "yandexDisk.Dockerfile" -t yandexdisk_image:v1 "." ##Собираем образ
-	docker run -d --name yandexdisk --restart unless-stopped --mount type=volume,dst=/home/node/.config/yandex-disk,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$(current_dir)/yandex-disk-config yandexdisk_image:v1
 	echo ОК
