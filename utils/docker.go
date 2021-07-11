@@ -30,6 +30,7 @@ func Docker(command string) {
 			"docker rmi $(docker images | grep gibdd_base_image | awk '{print $3}')", //Удаляем ,базовое изображение
 			"make install",                //Создаем базовый образ
 			"rm -rf ./yandex-disk-config", //Удаляем конфиг диска
+			"rm -f ./gibdd",               //Удаляем исходник
 		}
 	}
 	if command == "update" {
@@ -39,6 +40,7 @@ func Docker(command string) {
 			"docker rmi $(docker images | grep gibdd_image | awk '{print $3}')", //Удаляем изображение
 			"make update", //обновляем бинарник в базовом образе
 			// "docker system prune -a -f",
+			"rm -f ./gibdd", //Удаляем исходник
 		}
 	}
 
