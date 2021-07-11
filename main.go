@@ -107,6 +107,7 @@ func main() {
 						log.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
 						telegram.SendMessage(fmt.Sprintf("Упс... %v", err), chatID)
+						break
 					}
 					if countShtaf == 0 {
 						telegram.SendMessage(fmt.Sprintf("Debug: ✅ По регистрационному номеру %v штрафов не найдено", fullRegnum), myID)
@@ -191,6 +192,7 @@ func printShtraf(myID int, check bool, currentChatID int) {
 		if err != nil {
 			log.Println(err)
 			telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
+			continue
 		}
 		if check {
 			if countShtaf == 0 {
