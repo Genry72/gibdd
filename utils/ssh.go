@@ -18,7 +18,7 @@ import (
 // hostname := "104.196.182.179"
 //sshExec Выполнение коменд на удаленном хосте
 //sshExec Выполнение коменд на удаленном хосте
-func sshExec(hostname, sshKeyPath, username string) (err error) {
+func sshExec(hostname, sshKeyPath, username string, commands []string) (err error) {
 	port := "22"
 	// SSH client config
 	config := &ssh.ClientConfig{
@@ -27,7 +27,7 @@ func sshExec(hostname, sshKeyPath, username string) (err error) {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // This is OK, but not safe enough.
 		//HostKeyCallback: hostKeyCallBackFunc(h.Host),
 	}
-	config.Auth = []ssh.AuthMethod{publicKeyAuthFunc(sshKeyPath)}
+	config.Auth = []ssh.AuthMethod{PublicKeyAuthFunc(sshKeyPath)}
 	// Connect to host
 	client, err := ssh.Dial("tcp", hostname+":"+port, config)
 	if err != nil {
@@ -64,14 +64,6 @@ func sshExec(hostname, sshKeyPath, username string) (err error) {
 		return err
 	}
 
-	// send the commands
-	commands := []string{
-		// "rm test.txt",
-		// "rm test.txt",
-		"whoami",
-		"echo 'bye'",
-		"exit",
-	}
 	for _, cmd := range commands {
 		_, err = fmt.Fprintf(stdin, "%s\n", cmd)
 		if err != nil {
@@ -92,7 +84,8 @@ func sshExec(hostname, sshKeyPath, username string) (err error) {
 	return
 }
 
-func publicKeyAuthFunc(kPath string) ssh.AuthMethod {
+//PublicKeyAuthFunc возвращает публичный ключь
+func PublicKeyAuthFunc(kPath string) ssh.AuthMethod {
 	key, err := ioutil.ReadFile(kPath)
 	if err != nil {
 		log.Fatal("ssh key file read failed", err)
