@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -13,11 +12,6 @@ import (
 	//"bytes"
 )
 
-// username := "valsemenov86"
-// sshKeyPath := "./id_rsa"
-// hostname := "104.196.182.179"
-//sshExec Выполнение коменд на удаленном хосте
-//sshExec Выполнение коменд на удаленном хосте
 //SshExec Выполнение команд на удаленном хосте
 func SshExec(hostname, sshKeyPath, username string, commands []string) (err error) {
 	port := "22"
@@ -50,14 +44,14 @@ func SshExec(hostname, sshKeyPath, username string, commands []string) (err erro
 	}
 
 	// Uncomment to store output in variable
-	var b bytes.Buffer
+	// var b bytes.Buffer
 	//sess.Stdout = &b
-	sess.Stderr = &b
+	// sess.Stderr = &b
 
 	// Enable system stdout
 	// Comment these if you uncomment to store in variable
 	sess.Stdout = os.Stdout
-	// sess.Stderr = os.Stderr
+	sess.Stderr = os.Stderr
 
 	// Start remote shell
 	err = sess.Shell()
@@ -78,10 +72,10 @@ func SshExec(hostname, sshKeyPath, username string, commands []string) (err erro
 		return
 	}
 
-	if b.String() != "" {
-		err = fmt.Errorf("ошибка выполнения команд:\n%v", b.String())
-		return
-	}
+	// if b.String() != "" {
+	// 	err = fmt.Errorf("ошибка выполнения команд:\n%v", b.String())
+	// 	return
+	// }
 	return
 }
 
