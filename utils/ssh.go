@@ -18,7 +18,8 @@ import (
 // hostname := "104.196.182.179"
 //sshExec Выполнение коменд на удаленном хосте
 //sshExec Выполнение коменд на удаленном хосте
-func sshExec(hostname, sshKeyPath, username string, commands []string) (err error) {
+//SshExec Выполнение команд на удаленном хосте
+func SshExec(hostname, sshKeyPath, username string, commands []string) (err error) {
 	port := "22"
 	// SSH client config
 	config := &ssh.ClientConfig{
