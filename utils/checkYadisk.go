@@ -14,12 +14,16 @@ func CheckYadisk() (err error) {
 	for i := 0; i < 60; i++ {
 		f, err := os.Open("./yadisk/.sync/status")
 		if err != nil {
-			return err
+			log.Printf("Ждем запуск диска %v", err)
+			time.Sleep(5 * time.Second)
+			continue
 		}
 		defer f.Close()
 		c, err := ioutil.ReadAll(f)
 		if err != nil {
-			return err
+			log.Printf("Ждем запуск диска %v", err)
+			time.Sleep(5 * time.Second)
+			continue
 		}
 		if strings.Contains(string(c), "idle") {
 			return err
