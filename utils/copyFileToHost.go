@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
-
+//CopyFileToHost Копируем локальный файл на удаленную площадку
 func CopyFileToHost(srcPath, dstPath, username, sshKeyPath, hostname string) (err error) {
 	port := "22"
 	config := &ssh.ClientConfig{
