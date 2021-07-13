@@ -8,16 +8,31 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 //CopyFileToHost Копируем локальный файл на удаленную площадку
-func CopyFileToHost(srcPath, dstPath, username, sshKeyPath, hostname string) (err error) {
-	port := "22"
-	config := &ssh.ClientConfig{
-		Timeout:         time.Second, //ssh connection time out time is one second, if SSH validation error returns in one second
-		User:            username,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // This is OK, but not safe enough.
-		//HostKeyCallback: hostKeyCallBackFunc(h.Host),
+func CopyFileToHost(srcPath, dstPath, username, sshKeyPath, hostname, test string) (err error) {
+	var port string
+	var config *ssh.ClientConfig
+	if test == "false" { //Если катим удаленно
+		port = "22"
+		// SSH client config
+		config = &ssh.ClientConfig{
+			Timeout:         time.Second, //ssh connection time out time is one second, if SSH validation error returns in one second
+			User:            username,
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(), // This is OK, but not safe enough.
+			//HostKeyCallback: hostKeyCallBackFunc(h.Host),
+		}
+		config.Auth = []ssh.AuthMethod{PublicKeyAuthFunc(sshKeyPath)}
+	} else {//катим на локальный тестовый образ
+		port = "2222"
+		hostname = "localhost"
+		config = &ssh.ClientConfig{
+			User: "test",
+			Auth: []ssh.AuthMethod{
+				ssh.Password("test"),
+			},
+			// Non-production only
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		}
 	}
-	config.Auth = []ssh.AuthMethod{PublicKeyAuthFunc(sshKeyPath)}
-
 	client, err := ssh.Dial("tcp", hostname+":"+port, config)
 	if err != nil {
 		return

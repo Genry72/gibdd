@@ -7,7 +7,7 @@ import (
 	"os/exec"
 )
 
-func Docker(command string) {
+func Docker(command, test string) {
 	var localCommands []string
 	var remoteCommands []string
 	if os.Getenv("iidYandex") == "" || os.Getenv("passwdYandex") == "" {
@@ -15,6 +15,11 @@ func Docker(command string) {
 	}
 	if os.Getenv("remoteHost") == "" || os.Getenv("remoteUser") == "" {
 		log.Fatal("Не заданы переменные подключения к удаленному хосту: remoteHost либо remoteUser")
+	}
+	if test == "false" {
+		log.Println("Выполнение команд на удаленном сервере")
+	} else {
+		log.Println("Выполнение команд на тестовом сервере")
 	}
 	if command == "install" {
 		//Локально собираем конфиг для диска
@@ -35,7 +40,7 @@ func Docker(command string) {
 		//Отправляем файл на хост
 		log.Println("Собрали локальный архив")
 
-		err := CopyFileToHost("./install.tar.gz", "./install.tar.gz", os.Getenv("remoteUser"), "./id_rsa", os.Getenv("remoteHost"))
+		err := CopyFileToHost("./install.tar.gz", "./install.tar.gz", os.Getenv("remoteUser"), "./id_rsa", os.Getenv("remoteHost"), test)
 		if err != nil {
 			log.Println(err)
 			return
@@ -58,7 +63,7 @@ func Docker(command string) {
 			"rm -f ./gibdd",               //Удаляем исходник
 			"exit",
 		}
-		err = SshExec(os.Getenv("remoteHost"), "./id_rsa", os.Getenv("remoteUser"), remoteCommands)
+		err = SshExec(os.Getenv("remoteHost"), "./id_rsa", os.Getenv("remoteUser"), remoteCommands, test)
 		if err != nil {
 			log.Println(err)
 		}

@@ -37,18 +37,16 @@ func main() {
 		log.Fatal(err)
 	}
 	var c string
+	var test string
 	flag.StringVar(&c, "c", "", "команда")
+	flag.StringVar(&test, "test", "true", "Куда катим")
 	flag.Parse()
 	if c == "install" { //Первичная установка
-		utils.Docker(c)
+		utils.Docker(c, test)
 		return
 	}
 	if c == "update" { //Первичная установка
-		utils.Docker(c)
-		return
-	}
-	if c == "yandexDisk" { //Первичная установка
-		utils.Docker(c)
+		utils.Docker(c, test)
 		return
 	}
 	//Проверяем готовность диска
