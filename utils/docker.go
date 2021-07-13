@@ -25,34 +25,35 @@ func Docker(command, test string) {
 		//Локально собираем конфиг для диска
 		localCommands = []string{
 			// Собираем конфиг для диска
-			"rm -f ./install.tar.gz",
-			"rm -rf yandex-disk-config",
-			"mkdir yandex-disk-config", //Создаем папку с конфигом для подключения к диску
-			"echo $iidYandex > ./yandex-disk-config/iid",
-			"echo $passwdYandex > ./yandex-disk-config/passwd",
-			"echo auth=\"/home/node/.config/yandex-disk/passwd\" > ./yandex-disk-config/config.cfg",
-			"echo dir=\"/yadisk\" >> ./yandex-disk-config/config.cfg",
-			"echo proxy=\"no\" >> ./yandex-disk-config/config.cfg",
-			"GOOS=linux go build -o ./gibdd ./main.go", //Билдим бинарник
-			"tar -czf ./install.tar.gz ./gibdd ./env ./makefile ./yandexDisk.Dockerfile ./Dockerfile ./Base.Dockerfile ./yandex-disk-config",
+			"mkdir ./tmp",
+			"mkdir ./tmp/yandex-disk-config", //Создаем папку с конфигом для подключения к диску
+			"echo $iidYandex > ./tmp/yandex-disk-config/iid",
+			"echo $passwdYandex > ./tmp/yandex-disk-config/passwd",
+			"echo auth=\"/home/node/.config/yandex-disk/passwd\" > ./tmp/yandex-disk-config/config.cfg",
+			"echo dir=\"/yadisk\" >> ./tmp/yandex-disk-config/config.cfg",
+			"echo proxy=\"no\" >> ./tmp/yandex-disk-config/config.cfg",
+			"GOOS=linux go build -o ./tmp/gibdd ./main.go", //Билдим бинарник
+			"tar -czf ./tmp/install.tar.gz ./tmp/gibdd ./env ./makefile ./yandexDisk.Dockerfile ./Dockerfile ./Base.Dockerfile ./tmp/yandex-disk-config",
 		}
 		localCmd(localCommands)
 		//Отправляем файл на хост
 		log.Println("Собрали локальный архив")
 
-		err := CopyFileToHost("./install.tar.gz", "./install.tar.gz", os.Getenv("remoteUser"), "./id_rsa", os.Getenv("remoteHost"), test)
+		err := CopyFileToHost("./tmp/install.tar.gz", "./install.tar.gz", os.Getenv("remoteUser"), "./id_rsa", os.Getenv("remoteHost"), test)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 		log.Println("Отправили архив на сервер")
+		//Удаляем временную папку
+		localCmd([]string{"rm -rf ./tmp"})
 		remoteCommands = []string{
 			"mkdir -p ./gibdd/tmp",                    //Рабочая папка для запуска контейнеа
 			"tar -xf ./install.tar.gz -C ./gibdd/tmp", //распаковываем архив
 			"rm -f ./install.tar.gz",
 			"cd ./gibdd",
 			"mkdir -p ./yadisk/sync/gibddBot/", //Создаем папку для диска, она же и для БД
-			"docker rm --force -v yandexdisk",                                        //Удаляем контейнер и его вольюм
+			"docker rm --force -v yandexdisk",  //Удаляем контейнер и его вольюм
 			"docker rmi $(docker images | grep yandexdisk_image | awk '{print $3}')", //Удаляем изображение
 			"docker rm --force -v gibdd",                                             //Удаляем контейнер и его вольюм
 			"docker rmi $(docker images | grep gibdd_image | awk '{print $3}')",      //Удаляем изображение
