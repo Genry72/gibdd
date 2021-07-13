@@ -43,12 +43,12 @@ func Docker(command string) {
 		log.Println("Отправили архив на сервер")
 		remoteCommands = []string{
 			"rm -rf ./gibdd",
-			"mkdir ./gibdd", //Рабочая папка для запуска контейнеа
+			"mkdir ./gibdd",                       //Рабочая папка для запуска контейнеа
 			"tar -xf ./install.tar.gz -C ./gibdd", //распаковываем архив
 			"cd ./gibdd",
 			"mkdir -p ./yadisk/sync/gibddBot/", //Создаем папку для диска, она же и для БД
 			"chmod -R 777 ./yadisk",
-			"docker rm --force -v yandexdisk",                                        //Удаляем контейнер и его вольюм
+			"docker rm --force -v yandexdisk", //Удаляем контейнер и его вольюм
 			"docker rmi $(docker images | grep yandexdisk_image | awk '{print $3}')", //Удаляем изображение
 			"docker rm --force -v gibdd",                                             //Удаляем контейнер и его вольюм
 			"docker rmi $(docker images | grep gibdd_image | awk '{print $3}')",      //Удаляем изображение
@@ -73,9 +73,6 @@ func Docker(command string) {
 			"rm -f ./gibdd", //Удаляем исходник
 		}
 	}
-
-	// Выполняем команды локально
-return
 }
 
 //localCmd выполнение команд на локальном хосте
