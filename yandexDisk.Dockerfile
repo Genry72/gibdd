@@ -1,6 +1,6 @@
 FROM gibdd_base_image:v1
 WORKDIR /yadisk
-COPY ./yandex-disk-config /home/node/.config/yandex-disk
+COPY ./tmp/yandex-disk-config /home/node/.config/yandex-disk
 # RUN curl http://repo.yandex.ru/yandex-disk/yandex-disk_latest_amd64.deb -o ./yandex-disk_latest_amd64.deb &&\
 #     dpkg -i yandex-disk_latest_amd64.deb &&\
 #     apt update && apt install iputils-ping

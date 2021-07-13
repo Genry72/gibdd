@@ -25,12 +25,12 @@ up: ## Создание и запуск контейнера
 	docker container prune -f
 	echo ОК
 install: ##Создаем базовый образ
-	docker build -f "Base.Dockerfile" -t gibdd_base_image:v1 "." ##Собираем базовый образ
-	docker build -f "yandexDisk.Dockerfile" -t yandexdisk_image:v1 "." ##Собираем образ диска
+	docker build -f "./tmp/Base.Dockerfile" -t gibdd_base_image:v1 "." ##Собираем базовый образ
+	docker build -f "./tmp/yandexDisk.Dockerfile" -t yandexdisk_image:v1 "." ##Собираем образ диска
 	docker run -d --name yandexdisk --restart unless-stopped -v $(current_dir)/yadisk:/yadisk yandexdisk_image:v1 ##Запускаем диск
 	# GOOS=linux go build -o ./gibdd ./main.go ##Билдим
-	docker build -f "Dockerfile" -t gibdd_image:v1 "." ##Собираем исполняемый образ
-	docker run -d --env-file ./env --name gibdd --restart unless-stopped -v $(current_dir)/yadisk:/app/yadisk gibdd_image:v1
+	docker build -f "./tmp/Dockerfile" -t gibdd_image:v1 "." ##Собираем исполняемый образ
+	docker run -d --env-file ./tmp/env --name gibdd --restart unless-stopped -v $(current_dir)/yadisk:/app/yadisk gibdd_image:v1
 	echo ОК
 update: ##Обновляем в базовом образе исходник
 	GOOS=linux go build -o ./gibdd ./main.go ##Билдим

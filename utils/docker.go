@@ -47,20 +47,18 @@ func Docker(command, test string) {
 		}
 		log.Println("Отправили архив на сервер")
 		remoteCommands = []string{
-			"rm -rf ./gibdd",
-			"mkdir ./gibdd",                       //Рабочая папка для запуска контейнеа
-			"tar -xf ./install.tar.gz -C ./gibdd", //распаковываем архив
+			"mkdir -p ./gibdd/tmp",                    //Рабочая папка для запуска контейнеа
+			"tar -xf ./install.tar.gz -C ./gibdd/tmp", //распаковываем архив
+			"rm -f ./install.tar.gz",
 			"cd ./gibdd",
 			"mkdir -p ./yadisk/sync/gibddBot/", //Создаем папку для диска, она же и для БД
-			"chmod -R 777 ./yadisk",
-			"docker rm --force -v yandexdisk", //Удаляем контейнер и его вольюм
+			"docker rm --force -v yandexdisk",                                        //Удаляем контейнер и его вольюм
 			"docker rmi $(docker images | grep yandexdisk_image | awk '{print $3}')", //Удаляем изображение
 			"docker rm --force -v gibdd",                                             //Удаляем контейнер и его вольюм
 			"docker rmi $(docker images | grep gibdd_image | awk '{print $3}')",      //Удаляем изображение
 			"docker rmi $(docker images | grep gibdd_base_image | awk '{print $3}')", //Удаляем ,базовое изображение
-			"make install",                //Создаем базовый образ
-			"rm -rf ./yandex-disk-config", //Удаляем конфиг диска
-			"rm -f ./gibdd",               //Удаляем исходник
+			"make -f ./tmp/makefile install",                                         //Создаем базовый образ
+			"rm -rf ./tmp",
 			"exit",
 		}
 		err = SshExec(os.Getenv("remoteHost"), "./id_rsa", os.Getenv("remoteUser"), remoteCommands, test)
