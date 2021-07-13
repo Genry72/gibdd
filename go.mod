@@ -10,6 +10,4 @@ require (
 	gibdd/telegram v0.0.0-00010101000000-000000000000
 	gibdd/utils v0.0.0-00010101000000-000000000000
 	github.com/mattn/go-sqlite3 v1.14.7
-	github.com/pkg/sftp v1.13.2 // indirect
-	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
 )
