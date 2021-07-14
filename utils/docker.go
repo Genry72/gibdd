@@ -53,6 +53,8 @@ func Docker(command, test string) {
 			"rm -f ./install.tar.gz",
 			"cd ./gibdd",
 			"mkdir -p ./yadisk/sync/gibddBot/", //Создаем папку для диска, она же и для БД
+			// "echo test | sudo -S -s",
+			// "sudo -s",
 			"docker rm --force -v yandexdisk",  //Удаляем контейнер и его вольюм
 			"docker rmi $(docker images | grep yandexdisk_image | awk '{print $3}')", //Удаляем изображение
 			"docker rm --force -v gibdd",                                             //Удаляем контейнер и его вольюм
@@ -61,6 +63,7 @@ func Docker(command, test string) {
 			"make -f ./tmp/makefile install",                                         //Создаем базовый образ
 			"rm -rf ./tmp",
 			"exit",
+			// "exit",
 		}
 		err = SshExec(os.Getenv("remoteHost"), "./id_rsa", os.Getenv("remoteUser"), remoteCommands, test)
 		if err != nil {
