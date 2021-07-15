@@ -72,13 +72,44 @@ func Docker(command, test string) {
 		log.Println("Выполнили команды на удаленном хосте")
 	}
 	if command == "update" {
-		localCommands = []string{ //Компилируем исходник внутри контейнера. Исполняемый файл запускаем в другом контейнере.
-			"docker rm --force -v gibdd",                                        //Удаляем контейнер
-			"docker rmi $(docker images | grep gibdd_image | awk '{print $3}')", //Удаляем изображение
-			"make update", //обновляем бинарник в базовом образе
-			// "docker system prune -a -f",
-			"rm -f ./gibdd", //Удаляем исходник
+		//Локально собираем конфиг для диска
+		localCommands = []string{
+			// Компилируем
+			"mkdir ./tmp",
+			"GOOS=linux go build -o ./tmp/gibdd ./main.go", //Билдим бинарник
+			"tar -czf ./tmp/install.tar.gz ./tmp/gibdd ./env ./makefile ./Dockerfile",
 		}
+		localCmd(localCommands)
+		//Отправляем файл на хост
+		log.Println("Собрали локальный архив")
+
+		err := CopyFileToHost("./tmp/install.tar.gz", "./install.tar.gz", os.Getenv("remoteUser"), "./id_rsa", os.Getenv("remoteHost"), test)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		log.Println("Отправили архив на сервер")
+		//Удаляем временную папку
+		localCmd([]string{"rm -rf ./tmp"})
+		remoteCommands = []string{
+			"mkdir -p ./gibdd/tmp",                    //Рабочая папка для запуска контейнеа
+			"tar -xf ./install.tar.gz -C ./gibdd/tmp", //распаковываем архив
+			"rm -f ./install.tar.gz",
+			"cd ./gibdd",
+			// "echo test | sudo -S -s",
+			// "sudo -s",
+			"docker rm --force -v gibdd",                                             //Удаляем контейнер и его вольюм
+			"docker rmi $(docker images | grep gibdd_image | awk '{print $3}')",      //Удаляем изображение
+			"make -f ./tmp/makefile update",                                         //Создаем базовый образ
+			"rm -rf ./tmp",
+			"exit",
+			// "exit",
+		}
+		err = SshExec(os.Getenv("remoteHost"), "./id_rsa", os.Getenv("remoteUser"), remoteCommands, test)
+		if err != nil {
+			log.Println(err)
+		}
+		log.Println("Выполнили команды на удаленном хосте")
 	}
 }
 
