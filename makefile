@@ -27,12 +27,12 @@ up: ## Создание и запуск контейнера
 install: ##Создаем базовый образ
 	docker build -f "./tmp/Base.Dockerfile" -t gibdd_base_image:v1 "." ##Собираем базовый образ
 	docker build -f "./tmp/yandexDisk.Dockerfile" -t yandexdisk_image:v1 "." ##Собираем образ диска
-	# docker run -d --name yandexdisk --restart unless-stopped --mount type=bind,source=$(current_dir)/yadisk/,target=/home/node/yadisk yandexdisk_image:v1 ##Запускаем диск
-	docker run -d --name yandexdisk --restart unless-stopped -v $(current_dir)/yadisk:/yadisk yandexdisk_image:v1 ##Запускаем диск
+	docker run -d --name yandexdisk --restart unless-stopped --mount type=bind,source=$(current_dir)/yadisk/,target=/yadisk yandexdisk_image:v1 ##Запускаем диск
+	# docker run -d --name yandexdisk --restart unless-stopped -v $(current_dir)/yadisk:/yadisk yandexdisk_image:v1 ##Запускаем диск
 	# GOOS=linux go build -o ./gibdd ./main.go ##Билдим
 	docker build -f "./tmp/Dockerfile" -t gibdd_image:v1 "." ##Собираем исполняемый образ
-	# docker run -d --env-file ./tmp/env --name gibdd --restart unless-stopped --mount type=bind,source=$(current_dir)/yadisk/,target=/home/node/app/yadisk gibdd_image:v1
-	docker run -d --env-file ./tmp/env --name gibdd --restart unless-stopped -v $(current_dir)/yadisk:/app/yadisk gibdd_image:v1
+	docker run -d --env-file ./tmp/env --name gibdd --restart unless-stopped --mount type=bind,source=$(current_dir)/yadisk/,target=/app/yadisk gibdd_image:v1
+	# docker run -d --env-file ./tmp/env --name gibdd --restart unless-stopped -v $(current_dir)/yadisk:/app/yadisk gibdd_image:v1
 	echo ОК
 update: ##Обновляем в базовом образе исходник
 	GOOS=linux go build -o ./gibdd ./main.go ##Билдим
