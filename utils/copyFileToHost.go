@@ -22,12 +22,12 @@ func CopyFileToHost(srcPath, dstPath, username, sshKeyPath, hostname, test strin
 		}
 		config.Auth = []ssh.AuthMethod{PublicKeyAuthFunc(sshKeyPath)}
 	} else {//катим на локальный тестовый образ
-		port = "2222"
-		hostname = "localhost"
+		port = "22"
+		hostname = "10.10.50.15"
 		config = &ssh.ClientConfig{
-			User: "test",
+			User: "valentin",
 			Auth: []ssh.AuthMethod{
-				ssh.Password("test"),
+				ssh.Password("Phetore22"),
 			},
 			// Non-production only
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
