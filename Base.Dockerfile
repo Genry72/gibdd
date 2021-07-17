@@ -9,4 +9,5 @@ RUN apt update &&\
     update-ca-certificates -y &&\
     rm -rf /var/lib/apt/lists/* &&\
     groupadd --gid 2000 node &&\
-    useradd --uid 2000 --gid node --shell /bin/bash --create-home node
+    useradd --uid 2000 --gid node --shell /bin/bash --create-home node &&\
+    echo "Europe/Moscow" >  /etc/timezone
