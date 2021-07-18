@@ -37,13 +37,14 @@ update: ##Обновляем в базовом образе исходник
 	docker run -d --env-file ./tmp/env --name gibdd --restart unless-stopped -v $(current_dir)/yadisk:/home/node/app/yadisk:rw gibdd_image:v1
 	echo ОК
 yandex: ##Создаем базовый образ
-	mkdir yandex-disk-config
-	echo $(iidYandex) > yandex-disk-config/iid
-	echo $(passwdYandex) > yandex-disk-config/passwd
-	echo auth=\"/home/node/.config/yandex-disk/passwd\" > yandex-disk-config/config.cfg
-	echo dir=\"/yadisk\" >> yandex-disk-config/config.cfg
-	echo proxy=\"no\" >> yandex-disk-config/config.cfg
-	docker build -f "Base.Dockerfile" -t gibdd_base_image:v1 --build-arg USERID=$(shell id -u) --build-arg GROUPID=$(shell id -g) "." ##Собираем базовый образ
-	docker build -f "yandexDisk.Dockerfile" -t yandexdisk_image:v1 "." ##Собираем образ диска
-	docker run -d --name yandexdisk --restart unless-stopped -v $(current_dir)/yadisk/:/home/node/yadisk yandexdisk_image:v1 ##Запускаем диск
+	mkdir -p ./tmp/tmp/yandex-disk-config
+	mkdir ./yadisk
+	echo $(iidYandex) > ./tmp/tmp/yandex-disk-config/iid
+	echo $(passwdYandex) > ./tmp/tmp/yandex-disk-config/passwd
+	echo auth=\"/home/node/.config/yandex-disk/passwd\" > ./tmp/tmp/yandex-disk-config/config.cfg
+	echo dir=\"/yadisk\" >> ./tmp/tmp/yandex-disk-config/config.cfg
+	echo proxy=\"no\" >> ./tmp/tmp/yandex-disk-config/config.cfg
+	docker build -f "./Base.Dockerfile" -t gibdd_base_image:v1 --build-arg USERID=$(shell id -u) --build-arg GROUPID=$(shell id -g) "." ##Собираем базовый образ
+	docker build -f "./yandexDisk.Dockerfile" -t yandexdisk_image:v1 --build-arg USERID=$(shell id -u) --build-arg GROUPID=$(shell id -g) "." ##Собираем образ диска
+	docker run -d --name yandexdisk --restart unless-stopped --mount type=bind,source=$(current_dir)/yadisk/,target=/home/node/yadisk yandexdisk_image:v1 ##Запускаем диск
 	echo ОК

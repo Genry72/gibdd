@@ -111,6 +111,17 @@ func Docker(command, test string) {
 		}
 		log.Println("Выполнили команды на удаленном хосте")
 	}
+	if command == "yandex" {
+		localCommands = []string{
+			"rm -rf ./yadisk",
+			"docker rm --force -v yandexdisk",  //Удаляем контейнер и его вольюм
+			"docker rmi $(docker images | grep yandexdisk_image | awk '{print $3}')", //Удаляем изображение
+			// "docker rmi $(docker images | grep gibdd_base_image | awk '{print $3}')", //Удаляем ,базовое изображение
+			"make yandex",
+			"rm -rf ./tmp",
+		}
+		localCmd(localCommands)
+	}
 }
 
 //localCmd выполнение команд на локальном хосте

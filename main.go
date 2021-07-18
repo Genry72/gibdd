@@ -47,6 +47,10 @@ func main() {
 		utils.Docker(c, test)
 		return
 	}
+	if c == "yandex" { //Первичная установка
+		utils.Docker(c, test)
+		return
+	}
 	//Проверяем готовность диска
 	err := utils.CheckYadisk()
 	if err != nil {
