@@ -55,7 +55,7 @@ func Docker(command, test string) {
 			"mkdir -p ./yadisk/sync/gibddBot/", //Создаем папку для диска, она же и для БД
 			// "echo test | sudo -S -s",
 			// "sudo -s",
-			"docker rm --force -v yandexdisk",  //Удаляем контейнер и его вольюм
+			"docker rm --force -v yandexdisk",                                        //Удаляем контейнер и его вольюм
 			"docker rmi $(docker images | grep yandexdisk_image | awk '{print $3}')", //Удаляем изображение
 			"docker rm --force -v gibdd",                                             //Удаляем контейнер и его вольюм
 			"docker rmi $(docker images | grep gibdd_image | awk '{print $3}')",      //Удаляем изображение
@@ -98,9 +98,9 @@ func Docker(command, test string) {
 			"cd ./gibdd",
 			// "echo test | sudo -S -s",
 			// "sudo -s",
-			"docker rm --force -v gibdd",                                             //Удаляем контейнер и его вольюм
-			"docker rmi $(docker images | grep gibdd_image | awk '{print $3}')",      //Удаляем изображение
-			"make -f ./tmp/makefile update",                                         //Создаем базовый образ
+			"docker rm --force -v gibdd",                                        //Удаляем контейнер и его вольюм
+			"docker rmi $(docker images | grep gibdd_image | awk '{print $3}')", //Удаляем изображение
+			"make -f ./tmp/makefile update",                                     //Создаем базовый образ
 			"rm -rf ./tmp",
 			"exit",
 			// "exit",
@@ -114,7 +114,7 @@ func Docker(command, test string) {
 	if command == "yandex" {
 		localCommands = []string{
 			"rm -rf ./yadisk",
-			"docker rm --force -v yandexdisk",  //Удаляем контейнер и его вольюм
+			"docker rm --force -v yandexdisk", //Удаляем контейнер и его вольюм
 			"docker rmi $(docker images | grep yandexdisk_image | awk '{print $3}')", //Удаляем изображение
 			// "docker rmi $(docker images | grep gibdd_base_image | awk '{print $3}')", //Удаляем ,базовое изображение
 			"make yandex",
