@@ -227,7 +227,6 @@ func AddEvent(chatID int, numberPost, DateDiscount string) (err error) {
 	}
 	log.Println("Добавляем дату отправки уведомления")
 	insert := "INSERT INTO events (chatID, numberPost, create_date, DateDiscount) VALUES (?, ?, ?, ?)"
-	log.Println(chatID, numberPost, time.Now().String(), DateDiscount)
 	statement, _ := db.Prepare(insert)                               //Подготовка вставки
 	_, err = statement.Exec(chatID, numberPost, time.Now().String(), DateDiscount) //Вставка с параметрами
 	if err != nil {
