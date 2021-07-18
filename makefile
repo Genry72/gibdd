@@ -27,7 +27,7 @@ up: ## Создание и запуск контейнера
 install: ##Создаем базовый образ
 	docker build -f "./tmp/Base.Dockerfile" -t gibdd_base_image:v1 --build-arg USERID=$(shell id -u) --build-arg GROUPID=$(shell id -g) "." ##Собираем базовый образ
 	docker build -f "./tmp/yandexDisk.Dockerfile" -t yandexdisk_image:v1 --build-arg USERID=$(shell id -u) --build-arg GROUPID=$(shell id -g) "." ##Собираем образ диска
-	docker run -d --name yandexdisk --restart unless-stopped --mount type=bind,source=$(current_dir)/yadisk/,target=/home/node/yadisk yandexdisk_image:v1 ##Запускаем диск
+	docker run -d --name yandexdisk --restart unless-stopped -v $(current_dir)/yadisk/:/home/node/yadisk yandexdisk_image:v1 ##Запускаем диск
 	# GOOS=linux go build -o ./gibdd ./main.go ##Билдим
 	docker build -f "./tmp/Dockerfile" -t gibdd_image:v1 --build-arg USERID=$(shell id -u) --build-arg GROUPID=$(shell id -g) "." ##Собираем исполняемый образ
 	docker run -d --env-file ./tmp/env --name gibdd --restart unless-stopped -v $(current_dir)/yadisk:/home/node/app/yadisk:rw gibdd_image:v1
@@ -45,5 +45,5 @@ yandex: ##Создаем базовый образ
 	echo proxy=\"no\" >> yandex-disk-config/config.cfg
 	docker build -f "Base.Dockerfile" -t gibdd_base_image:v1 --build-arg USERID=$(shell id -u) --build-arg GROUPID=$(shell id -g) "." ##Собираем базовый образ
 	docker build -f "yandexDisk.Dockerfile" -t yandexdisk_image:v1 "." ##Собираем образ диска
-	docker run -d --name yandexdisk --restart unless-stopped -v $(current_dir)/yadisk/:/yadisk:z yandexdisk_image:v1 ##Запускаем диск
+	docker run -d --name yandexdisk --restart unless-stopped -v $(current_dir)/yadisk/:/home/node/yadisk yandexdisk_image:v1 ##Запускаем диск
 	echo ОК

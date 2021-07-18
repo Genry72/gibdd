@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
+
 //CopyFileToHost Копируем локальный файл на удаленную площадку
 func CopyFileToHost(srcPath, dstPath, username, sshKeyPath, hostname, test string) (err error) {
 	var port string
@@ -21,13 +22,13 @@ func CopyFileToHost(srcPath, dstPath, username, sshKeyPath, hostname, test strin
 			//HostKeyCallback: hostKeyCallBackFunc(h.Host),
 		}
 		config.Auth = []ssh.AuthMethod{PublicKeyAuthFunc(sshKeyPath)}
-	} else {//катим на локальный тестовый образ
+	} else { //катим на локальный тестовый образ
 		port = "22"
 		hostname = "10.10.50.15"
 		config = &ssh.ClientConfig{
 			User: "valentin",
 			Auth: []ssh.AuthMethod{
-				ssh.Password("Phetore22"),
+				ssh.Password("test123"),
 			},
 			// Non-production only
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
