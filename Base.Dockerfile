@@ -5,6 +5,7 @@ RUN groupadd --gid $GROUPID node &&\
     useradd -rm -d /home/node -s /bin/bash -G sudo -u $USERID --gid $GROUPID node &&\
     apt update &&\
     apt install ca-certificates\
+    tzdata\
     # iputils-ping \
     curl -y &&\
     curl https://curl.se/ca/cacert.pem -o ./CERTIFICATE.pem &&\
@@ -12,4 +13,4 @@ RUN groupadd --gid $GROUPID node &&\
     cp CERTIFICATE.crt /usr/local/share/ca-certificate &&\
     update-ca-certificates -y &&\
     rm -rf /var/lib/apt/lists/* &&\
-    echo "Europe/Moscow" >  /etc/timezone
+    ln -fs /usr/share/zoneinfo/Europe/Moscow /etc/localtime && dpkg-reconfigure -f noninteractive tzdata
