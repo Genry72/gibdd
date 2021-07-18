@@ -30,7 +30,7 @@ func Docker(command, test string) {
 			"echo $iidYandex > ./tmp/yandex-disk-config/iid",
 			"echo $passwdYandex > ./tmp/yandex-disk-config/passwd",
 			"echo auth=\"/home/node/.config/yandex-disk/passwd\" > ./tmp/yandex-disk-config/config.cfg",
-			"echo dir=\"/yadisk\" >> ./tmp/yandex-disk-config/config.cfg",
+			"echo dir=\"/home/node/yadisk\" >> ./tmp/yandex-disk-config/config.cfg",
 			"echo proxy=\"no\" >> ./tmp/yandex-disk-config/config.cfg",
 			"GOOS=linux go build -o ./tmp/gibdd ./main.go", //Билдим бинарник
 			"tar -czf ./tmp/install.tar.gz ./tmp/gibdd ./env ./makefile ./yandexDisk.Dockerfile ./Dockerfile ./Base.Dockerfile ./tmp/yandex-disk-config",

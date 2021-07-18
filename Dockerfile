@@ -1,7 +1,9 @@
 FROM gibdd_base_image:v1
-WORKDIR /app
-COPY ./tmp/tmp/gibdd /app
-RUN chown -R node:node /app
+ARG USERID
+ARG GROUPID
+USER $USERID:$GROUPID
+RUN mkdir -p /home/node/app
+WORKDIR /home/node/app
+COPY ./tmp/tmp/gibdd /home/node/app
 
-USER 2000
 ENTRYPOINT ["./gibdd"]

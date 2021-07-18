@@ -1,5 +1,9 @@
 FROM ubuntu:20.04
-RUN apt update &&\
+ARG USERID
+ARG GROUPID
+RUN groupadd --gid $GROUPID node &&\
+    useradd -rm -d /home/node -s /bin/bash -G sudo -u $USERID --gid $GROUPID node &&\
+    apt update &&\
     apt install ca-certificates\
     # iputils-ping \
     curl -y &&\
@@ -8,6 +12,4 @@ RUN apt update &&\
     cp CERTIFICATE.crt /usr/local/share/ca-certificate &&\
     update-ca-certificates -y &&\
     rm -rf /var/lib/apt/lists/* &&\
-    groupadd --gid 2000 node &&\
-    useradd --uid 2000 --gid node --shell /bin/bash --create-home node &&\
     echo "Europe/Moscow" >  /etc/timezone
