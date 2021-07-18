@@ -42,7 +42,8 @@ func AddDB() (err error) {
 		id    		INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
 		chatID		INTEGER, --Принадлежность пользоватлею
 		numberPost  TEXT, --номер постановления
-		create_date TEXT
+		create_date TEXT,
+		DateDiscount TEXT --Дата окончания действия скидки
 	  )
 	`
 	_, err = db.Exec(usersTab)
@@ -208,7 +209,7 @@ func Getreg() (mapa map[int][]string, err error) {
 }
 
 //AddEvent Добавляем дату отправки уведомления
-func AddEvent(chatID int, numberPost string) (err error) {
+func AddEvent(chatID int, numberPost, DateDiscount string) (err error) {
 	db, err := sql.Open("sqlite3", "./yadisk/sync/gibddBot/gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
@@ -225,9 +226,10 @@ func AddEvent(chatID int, numberPost string) (err error) {
 		return
 	}
 	log.Println("Добавляем дату отправки уведомления")
-	insert := "INSERT INTO events (chatID, numberPost, create_date) VALUES (?, ?, ?)"
+	insert := "INSERT INTO events (chatID, numberPost, create_date, DateDiscount) VALUES (?, ?, ?, ?)"
+	log.Println(chatID, numberPost, time.Now().String(), DateDiscount)
 	statement, _ := db.Prepare(insert)                               //Подготовка вставки
-	_, err = statement.Exec(chatID, numberPost, time.Now().String()) //Вставка с параметрами
+	_, err = statement.Exec(chatID, numberPost, time.Now().String(), DateDiscount) //Вставка с параметрами
 	if err != nil {
 		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
 		return

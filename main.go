@@ -321,7 +321,7 @@ func sendShtafs(nomer, region, sts string, chatID int, check bool) (countShtaf i
 			os.Remove("./" + fmt.Sprint(i) + shtraf.NumPost + ".jpeg")
 		}
 		if !errSend { //Если при отправки не было ошибок, то добавляем запись
-			err = utils.AddEvent(chatID, post)
+			err = utils.AddEvent(chatID, post, shtraf.DateDiscount)
 			if err != nil {
 				return countShtaf, err
 			}
