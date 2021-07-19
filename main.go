@@ -275,6 +275,7 @@ func sendShtafs(nomer, region, sts string, chatID int, check bool) (countShtaf i
 		// fmt.Printf("Дата нарушения %v\n", dateNarush)
 		shtrafString := fmt.Sprintf("❗Штраф на сумму %vр\n", shtraf.Summa)
 		shtrafString = shtrafString + fmt.Sprintf("Авто %v %v\n", shtraf.VehicleModel, nomer+region)
+		shtrafString = shtrafString + fmt.Sprintf("Постановление № %v\n", shtraf.NumPost)
 		shtrafString = shtrafString + fmt.Sprintf("Оплата со скидкой до %v\n", shtraf.DateDiscount)
 		shtrafString = shtrafString + fmt.Sprintf("Дата нарушения %v\n", dateNarush)
 		shtrafString = shtrafString + fmt.Sprintf("Адрес: %v\n", m.Divisions[shtraf.Division]["fulladdr"])
