@@ -170,6 +170,23 @@ func main() {
 			}
 		}
 	}()
+	go func() { //Проверяем дискаунты
+		for {
+			if time.Now().Hour() != 17 { //Уведомления отправляем в 17 часу
+				log.Println("Пропускаем проверку дискаунтов")
+				time.Sleep(15 * time.Minute)
+				continue
+			}
+			err = sendDiscounts(myID)
+			if err != nil {
+				log.Printf("Ошибка проверки дискаунтов: %v", err)
+				telegram.SendMessage(fmt.Sprintf("Debug: Ошибка проверки дискаунтов: %v", err), myID)
+				continue
+			}
+			time.Sleep(1 * time.Hour) //Спим час, в случае отправки
+		}
+
+	}()
 	//В бесконечном цикле проверяем штрафы
 	for {
 		printShtraf(myID, false, 0)
@@ -393,6 +410,32 @@ func base64toJpg(filepath, data string) (err error) {
 		return err
 	}
 	return err
+}
+
+// sendDiscounts Отправляет инфу о том что заканчивается время оплаты со скидкой
+func sendDiscounts(myID int) (err error) {
+	mapa, err := utils.GetDiscount()
+	if err != nil {
+		return
+	}
+	for key, value := range mapa {
+		chatID := value[1]
+		t2, err := time.Parse("2006-01-02 15:04:05", value[0]) //Парсим дату
+		if err != nil {
+			return err
+		}
+		t1 := time.Now()
+		sec := int(t2.Sub(t1)/time.Second - 3*3600) //Вычитаем три часа, так как дата передается без часового пояса
+		day := sec / 86400
+		hours := (sec - (day * 86400)) / 3600
+		minute := (sec - (day*86400 + hours*3600)) / 60
+		sesec := (sec - (day*86400 + hours*3600 + minute*60))
+		msg := fmt.Sprintf("❗До льготной оплаты по постановлению %v осталось %v дней, %v часов, %v минут, %v секунд", key, day, hours, minute, sesec)
+		telegram.SendMessage("Debug "+msg, myID)
+		id, _ := strconv.Atoi(chatID)
+		telegram.SendMessage(msg, id)
+	}
+	return
 }
 
 type linkImageStruct struct {

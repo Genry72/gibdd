@@ -260,3 +260,33 @@ func СheckEvent(chatID int, numberPost string) (est bool, err error) {
 	}
 	return
 }
+
+//GetDiscount Возвращает мапу для оправки уведомлений, о том что заканчивается период оплаты со скидкой
+func GetDiscount() (mapa map[string][]string, err error) {
+	db, err := sql.Open("sqlite3", "./yadisk/sync/gibddBot/gibdd.db")
+	if err != nil {
+		err = fmt.Errorf("ошибка создания БД:%v", err)
+		return
+	}
+
+	defer db.Close()
+	zapros := fmt.Sprintf("SELECT chatID, numberPost, DateDiscount FROM events WHERE DateDiscount BETWEEN '%v' AND '%v';", time.Now().String(), time.Now().Add(72*time.Hour).String())
+	rows, err := db.Query(zapros)
+	if err != nil {
+		return
+	}
+
+	var numberPost string
+	var chatID string
+	var DateDiscount string
+	checkMap := make(map[string][]string) //Мапа для проверки штрафов по всем рег данным
+	for rows.Next() {
+		err = rows.Scan(&chatID, &numberPost, &DateDiscount)
+		if err != nil {
+			return
+		}
+		checkMap[numberPost] = []string{DateDiscount, chatID}
+	}
+	mapa = checkMap
+	return
+}
