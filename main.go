@@ -250,6 +250,7 @@ func sendShtafs(nomer, region, sts string, chatID int, check bool) (countShtaf i
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
+		err = fmt.Errorf("ошибка sendShtafs: %v", err)
 		return
 	}
 	req.Header.Add("Accept", "application/json, text/javascript, */*; q=0.01")
