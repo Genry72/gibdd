@@ -257,6 +257,7 @@ func sendShtafs(nomer, region, sts string, chatID int, check bool) (countShtaf i
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 	res, err := client.Do(req)
 	if err != nil {
+		err = fmt.Errorf("ошибка sendShtafs: %v", err)
 		return
 	}
 	defer res.Body.Close()
