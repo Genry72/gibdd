@@ -430,7 +430,7 @@ func sendDiscounts(myID int) (err error) {
 		hours := (sec - (day * 86400)) / 3600
 		minute := (sec - (day*86400 + hours*3600)) / 60
 		sesec := (sec - (day*86400 + hours*3600 + minute*60))
-		msg := fmt.Sprintf("❗До льготной оплаты по постановлению %v осталось %v дней, %v часов, %v минут, %v секунд", key, day, hours, minute, sesec)
+		msg := fmt.Sprintf("❗До льготной оплаты по постановлению %v осталось %v дней, %v часов, %v минут, %v секунд\nОплата со скидкой до %v", key, day, hours, minute, sesec, value[0])
 		telegram.SendMessage("Debug "+msg, myID)
 		id, _ := strconv.Atoi(chatID)
 		telegram.SendMessage(msg, id)
