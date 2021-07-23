@@ -6,6 +6,7 @@ RUN groupadd --gid $GROUPID node &&\
     apt update &&\
     apt install ca-certificates\
     tzdata\
+    # sudo \
     # iputils-ping \
     curl -y &&\
     curl https://curl.se/ca/cacert.pem -o ./CERTIFICATE.pem &&\
@@ -14,3 +15,4 @@ RUN groupadd --gid $GROUPID node &&\
     update-ca-certificates -y &&\
     rm -rf /var/lib/apt/lists/* &&\
     ln -fs /usr/share/zoneinfo/Europe/Moscow /etc/localtime && dpkg-reconfigure -f noninteractive tzdata
+# RUN echo 'node:node' | chpasswd
