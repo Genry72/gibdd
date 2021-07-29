@@ -223,7 +223,8 @@ func printShtraf(myID int, check bool, currentChatID int) {
 		countShtaf, err := sendShtafs(nomer, region, sts, id, check)
 		if err != nil {
 			log.Println(err)
-			telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
+			telegram.SendMessage(fmt.Sprintf("Debug: %s следующая проверка через час", err), myID)
+			time.Sleep(60*time.Minute)
 			continue
 		}
 		if check {
