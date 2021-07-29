@@ -1,4 +1,4 @@
-# gibdd 
+# gibdd
 
 .bash_profile
 export telegaGibddToken=XXXX
@@ -11,3 +11,7 @@ export remoteHost="111.111.111.111" ##Хост с докером для уста
 export remoteUser="username" ##Имя пользователя на удаленном хосте
 
 source .profile
+
+.env
+myIDtelega=XXXX
+telegaGibddToken=XXXX
