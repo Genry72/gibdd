@@ -12,6 +12,6 @@ export remoteUser="username" ##Имя пользователя на удален
 
 source .profile
 
-.env
+env
 myIDtelega=XXXX
 telegaGibddToken=XXXX
