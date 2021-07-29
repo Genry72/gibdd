@@ -15,3 +15,5 @@ source .profile
 env
 myIDtelega=XXXX
 telegaGibddToken=XXXX
+
+id_rsa в корне с приватным ключем доступа в облако
