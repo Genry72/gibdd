@@ -6,7 +6,8 @@ ssh_pub_key=$(shell cat ~/.ssh/id_rsa.pub)
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
 build:
-	docker-compose -f docker-compose.yml build
+	docker build -f "./Build.Dockerfile" -t build:v1 "." ##Образ для компиляции исходника
+	docker run -d --name build --rm -v $(current_dir)/tmp/:/tmp/bin1/ build:v1
 up: ## Создание и запуск контейнера
 	# ## Удаляем бинарник
 	# rm -rf ./app/test

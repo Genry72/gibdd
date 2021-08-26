@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 )
 
 func Docker(command, test string) {
@@ -84,6 +85,15 @@ func Docker(command, test string) {
 			"mkdir ./tmp",
 			"GOOS=linux go build -o ./tmp/gibdd ./main.go", //Билдим бинарник
 			"tar -czf ./tmp/install.tar.gz ./tmp/gibdd ./env ./makefile ./Dockerfile",
+		}
+		if runtime.GOOS == "darwin" { //Если это мак, то компилим в контейнере
+			infoLog.Println("Компилируем исходник в контейнере")
+			localCommands = []string{
+				"mkdir ./tmp", //временная папка для бинарника
+				"make build",
+				"docker rmi $(docker images | grep build | awk '{print $3}')",
+				"tar -czf ./tmp/install.tar.gz ./tmp/gibdd ./env ./makefile ./Dockerfile",
+			}
 		}
 		localCmd(localCommands)
 		//Отправляем файл на хост
