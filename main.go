@@ -162,7 +162,12 @@ func main() {
 						errorLog.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
 					}
-					printShtraf(myID, true, chatID)
+					err = printShtraf(myID, true, chatID)
+					if err != nil {
+						errorLog.Println(err)
+						telegram.SendMessage(fmt.Sprintf("Debug: Сорян, на текущий момент есть проблемы с доступностью сайта gibdd:%v", err), myID)
+						telegram.SendMessage(fmt.Sprintln("Debug: Сорян, на текущий момент есть проблемы с доступностью сайта gibdd"), myID)
+					}
 				default:
 					//Сразу добавляем пользователя в базу
 					err := utils.AddUser(sender, username, chatID)
@@ -196,7 +201,11 @@ func main() {
 	}()
 	//В бесконечном цикле проверяем штрафы
 	for {
-		printShtraf(myID, false, 0)
+		err = printShtraf(myID, false, 0)
+		if err != nil {
+			errorLog.Println(err)
+			time.Sleep(60 * time.Minute)
+		}
 		time.Sleep(5 * time.Minute)
 	}
 
@@ -204,7 +213,7 @@ func main() {
 }
 
 //printShtraf Печатаем штрафы в телегу
-func printShtraf(myID int, check bool, currentChatID int) {
+func printShtraf(myID int, check bool, currentChatID int) (err error) {
 	//Подсветка ошибок и удачных сообщений
 	colorRed := "\033[31m"
 	// colorGreen := "\033[32m"
@@ -237,8 +246,7 @@ func printShtraf(myID int, check bool, currentChatID int) {
 		if err != nil {
 			errorLog.Println(err)
 			telegram.SendMessage(fmt.Sprintf("Debug: %s следующая проверка через час", err), myID)
-			time.Sleep(60 * time.Minute)
-			continue
+			return err
 		}
 		if check {
 			if countShtaf == 0 {
@@ -250,7 +258,7 @@ func printShtraf(myID int, check bool, currentChatID int) {
 			telegram.SendMessage(fmt.Sprintf("❗️❗️ Колличество штрафов по номеру %v: %v", fullRegnum, countShtaf), currentChatID)
 		}
 	}
-
+	return
 }
 
 //sendShtafs Функция отправляет штрафы по конкретному пользователю + ПТС
