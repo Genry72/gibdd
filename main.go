@@ -79,6 +79,7 @@ func main() {
 				time.Sleep(5 * time.Minute)
 				continue
 			}
+			infoLog.Printf("Получили офсет %v", offset)
 			if offset == 0 {
 				continue
 			}

@@ -49,6 +49,7 @@ func GetOfset() (offset int, err error) {
 }
 
 func Getupdate(offset int) (message, sender string, chatID int, newOffset int, username string, err error) {
+	log.Printf("Получаем сообщения из телеги, офсет %v", offset)
 	token := os.Getenv("telegaGibddToken")
 	if token == "" {
 		err = fmt.Errorf("не задан токен")
@@ -81,6 +82,7 @@ func Getupdate(offset int) (message, sender string, chatID int, newOffset int, u
 		return message, sender, chatID, newOffset, username, err
 	}
 	if len(m.Result) == 0 { //Таймаут по долгому запросу
+		log.Printf("Сработал таймаут Боди:%v", string(body))
 		return message, sender, chatID, offset, username, err
 	}
 	if m.Result[0].Message.Text == "" { //Тип сообщения не текст
