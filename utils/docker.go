@@ -8,18 +8,24 @@ import (
 )
 
 func Docker(command, test string) {
+	//Подсветка ошибок и удачных сообщений
+	colorRed := "\033[31m"
+	colorGreen := "\033[32m"
+	reset := "\033[0m"
+	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	var localCommands []string
 	var remoteCommands []string
 	if os.Getenv("iidYandex") == "" || os.Getenv("passwdYandex") == "" {
-		log.Fatal("Не заданы переменные iidYandex либо passwdYandex")
+		errorLog.Fatal("Не заданы переменные iidYandex либо passwdYandex")
 	}
 	if os.Getenv("remoteHost") == "" || os.Getenv("remoteUser") == "" {
-		log.Fatal("Не заданы переменные подключения к удаленному хосту: remoteHost либо remoteUser")
+		errorLog.Fatal("Не заданы переменные подключения к удаленному хосту: remoteHost либо remoteUser")
 	}
 	if test == "false" {
-		log.Println("Выполнение команд на удаленном сервере")
+		infoLog.Println("Выполнение команд на удаленном сервере")
 	} else {
-		log.Println("Выполнение команд на тестовом сервере")
+		infoLog.Println("Выполнение команд на тестовом сервере")
 	}
 	if command == "install" {
 		//Локально собираем конфиг для диска
@@ -37,14 +43,14 @@ func Docker(command, test string) {
 		}
 		localCmd(localCommands)
 		//Отправляем файл на хост
-		log.Println("Собрали локальный архив")
-
+		infoLog.Println("Собрали локальный архив")
+		infoLog.Println("Отправляем архив на сервер")
 		err := CopyFileToHost("./tmp/install.tar.gz", "./install.tar.gz", os.Getenv("remoteUser"), "./id_rsa", os.Getenv("remoteHost"), test)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		log.Println("Отправили архив на сервер")
+		infoLog.Println("Отправили архив на сервер")
 		//Удаляем временную папку
 		localCmd([]string{"rm -rf ./tmp"})
 		remoteCommands = []string{
@@ -67,9 +73,9 @@ func Docker(command, test string) {
 		}
 		err = SshExec(os.Getenv("remoteHost"), "./id_rsa", os.Getenv("remoteUser"), remoteCommands, test)
 		if err != nil {
-			log.Println(err)
+			errorLog.Println(err)
 		}
-		log.Println("Выполнили команды на удаленном хосте")
+		infoLog.Println("Выполнили команды на удаленном хосте")
 	}
 	if command == "update" {
 		//Локально собираем конфиг для диска
@@ -81,14 +87,14 @@ func Docker(command, test string) {
 		}
 		localCmd(localCommands)
 		//Отправляем файл на хост
-		log.Println("Собрали локальный архив")
+		infoLog.Println("Собрали локальный архив")
 
 		err := CopyFileToHost("./tmp/install.tar.gz", "./install.tar.gz", os.Getenv("remoteUser"), "./id_rsa", os.Getenv("remoteHost"), test)
 		if err != nil {
-			log.Println(err)
+			errorLog.Println(err)
 			return
 		}
-		log.Println("Отправили архив на сервер")
+		infoLog.Println("Отправили архив на сервер")
 		//Удаляем временную папку
 		localCmd([]string{"rm -rf ./tmp"})
 		remoteCommands = []string{
@@ -107,9 +113,9 @@ func Docker(command, test string) {
 		}
 		err = SshExec(os.Getenv("remoteHost"), "./id_rsa", os.Getenv("remoteUser"), remoteCommands, test)
 		if err != nil {
-			log.Println(err)
+			errorLog.Println(err)
 		}
-		log.Println("Выполнили команды на удаленном хосте")
+		infoLog.Println("Выполнили команды на удаленном хосте")
 	}
 	if command == "yandex" {
 		localCommands = []string{
@@ -126,13 +132,19 @@ func Docker(command, test string) {
 
 //localCmd выполнение команд на локальном хосте
 func localCmd(localCommands []string) {
+	//Подсветка ошибок и удачных сообщений
+	colorRed := "\033[31m"
+	// colorGreen := "\033[32m"
+	reset := "\033[0m"
+	// infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	for _, command := range localCommands {
 		cmd := exec.Command("bash", "-c", command)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {
 			err := fmt.Errorf("команда: %v Ошибка: %v", command, err)
-			log.Println(err)
+			errorLog.Println(err)
 		}
 	}
 }

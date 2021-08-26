@@ -15,6 +15,12 @@ import (
 )
 
 func SendMessage(message string, chatid int) (err error) {
+	//Подсветка ошибок и удачных сообщений
+	colorRed := "\033[31m"
+	// colorGreen := "\033[32m"
+	reset := "\033[0m"
+	// infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	token := os.Getenv("telegaGibddToken")
 	url := "https://api.telegram.org/bot" + token + "/sendMessage"
 	method := "POST"
@@ -22,13 +28,13 @@ func SendMessage(message string, chatid int) (err error) {
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
-		log.Println(err)
+		errorLog.Println(err)
 		return
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	res, err := client.Do(req)
 	if err != nil {
-		log.Println(err)
+		errorLog.Println(err)
 		return
 	}
 	defer res.Body.Close()
@@ -38,19 +44,19 @@ func SendMessage(message string, chatid int) (err error) {
 	}
 	if res.StatusCode != 200 {
 		err = fmt.Errorf("ошибка отправки сообщения в телеграм %v: %v", res.Status, string(body))
-		log.Println(err)
+		errorLog.Println(err)
 		return
 	}
 	t := sendMsgTelegaStruct{}
 	err = json.Unmarshal(body, &t)
 	if err != nil {
 		err = fmt.Errorf("ошибка Парсинга боди ответа на отправку сообщения %v", string(body))
-		log.Println(err)
+		errorLog.Println(err)
 		return
 	}
 	if !t.Ok {
 		err = fmt.Errorf("ошибка отправки сообщения в телеграм %v: %v", res.Status, string(body))
-		log.Println(err)
+		errorLog.Println(err)
 		return
 	}
 	return
@@ -58,10 +64,16 @@ func SendMessage(message string, chatid int) (err error) {
 
 //SendPhoto отправка фото
 func SendPhoto(photoName, message string, chatid int) (err error) {
+	//Подсветка ошибок и удачных сообщений
+	colorRed := "\033[31m"
+	// colorGreen := "\033[32m"
+	reset := "\033[0m"
+	// infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	token := os.Getenv("telegaGibddToken")
 	if token == "" {
 		err = fmt.Errorf("не задан токен")
-		log.Println(err)
+		errorLog.Println(err)
 		return
 	}
 	url := "https://api.telegram.org/bot" + token + "/sendPhoto"
@@ -72,24 +84,24 @@ func SendPhoto(photoName, message string, chatid int) (err error) {
 	_ = writer.WriteField("chat_id", fmt.Sprint(chatid))
 	file, errFile2 := os.Open("./" + photoName)
 	if errFile2 != nil {
-		log.Println(errFile2)
+		errorLog.Println(errFile2)
 		return errFile2
 	}
 	defer file.Close()
 	part2, errFile2 := writer.CreateFormFile("photo", filepath.Base("./"+photoName))
 	if errFile2 != nil {
-		log.Println(errFile2)
+		errorLog.Println(errFile2)
 		return errFile2
 	}
 	_, errFile2 = io.Copy(part2, file)
 	if errFile2 != nil {
-		log.Println(errFile2)
+		errorLog.Println(errFile2)
 		return errFile2
 	}
 	_ = writer.WriteField("caption", message)
 	err = writer.Close()
 	if err != nil {
-		fmt.Println(err)
+		errorLog.Println(err)
 		return errFile2
 	}
 
@@ -97,37 +109,37 @@ func SendPhoto(photoName, message string, chatid int) (err error) {
 	req, err := http.NewRequest(method, url, payload)
 
 	if err != nil {
-		fmt.Println(err)
+		errorLog.Println(err)
 		return
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	res, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
+		errorLog.Println(err)
 		return
 	}
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		fmt.Println(err)
+		errorLog.Println(err)
 		return
 	}
 	if res.StatusCode != 200 {
 		err = fmt.Errorf("ошибка отправки сообщения в телеграм %v: %v", res.Status, string(body))
-		log.Println(err)
+		errorLog.Println(err)
 		return
 	}
 	t := sendMsgTelegaStruct{}
 	err = json.Unmarshal(body, &t)
 	if err != nil {
 		err = fmt.Errorf("ошибка Парсинга боди ответа на отправку сообщения %v", string(body))
-		log.Println(err)
+		errorLog.Println(err)
 		return
 	}
 	if !t.Ok {
 		err = fmt.Errorf("ошибка отправки сообщения в телеграм %v: %v", res.Status, string(body))
-		log.Println(err)
+		errorLog.Println(err)
 		return
 	}
 	return

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"time"
 )
 
@@ -66,6 +67,12 @@ func AddDB() (err error) {
 
 //AddUser Добавление пользователя в БД
 func AddUser(sender, username string, chatID int) (err error) {
+	//Подсветка ошибок и удачных сообщений
+	// colorRed := "\033[31m"
+	colorGreen := "\033[32m"
+	reset := "\033[0m"
+	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+	// errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	db, err := sql.Open("sqlite3", "./yadisk/sync/gibddBot/gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
@@ -90,12 +97,18 @@ func AddUser(sender, username string, chatID int) (err error) {
 		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
 		return
 	}
-	log.Printf("Пользователь %v добавлен в БД", username)
+	infoLog.Printf("Пользователь %v добавлен в БД", username)
 	return
 }
 
 //AddReg Добавление регистрационные данные в БД
 func AddReg(regnum, regreg, stsnum string, chatID int) (err error) {
+	//Подсветка ошибок и удачных сообщений
+	// colorRed := "\033[31m"
+	colorGreen := "\033[32m"
+	reset := "\033[0m"
+	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+	// errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	db, err := sql.Open("sqlite3", "./yadisk/sync/gibddBot/gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
@@ -126,7 +139,7 @@ func AddReg(regnum, regreg, stsnum string, chatID int) (err error) {
 		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
 		return
 	}
-	log.Println("Рег данные успешно добавлены")
+	infoLog.Println("Рег данные успешно добавлены")
 	return
 }
 
@@ -210,6 +223,12 @@ func Getreg() (mapa map[int][]string, err error) {
 
 //AddEvent Добавляем дату отправки уведомления
 func AddEvent(chatID int, numberPost, DateDiscount string) (err error) {
+	//Подсветка ошибок и удачных сообщений
+	// colorRed := "\033[31m"
+	colorGreen := "\033[32m"
+	reset := "\033[0m"
+	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+	// errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	db, err := sql.Open("sqlite3", "./yadisk/sync/gibddBot/gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
@@ -227,18 +246,24 @@ func AddEvent(chatID int, numberPost, DateDiscount string) (err error) {
 	}
 	log.Println("Добавляем дату отправки уведомления")
 	insert := "INSERT INTO events (chatID, numberPost, create_date, DateDiscount) VALUES (?, ?, ?, ?)"
-	statement, _ := db.Prepare(insert)                               //Подготовка вставки
+	statement, _ := db.Prepare(insert)                                             //Подготовка вставки
 	_, err = statement.Exec(chatID, numberPost, time.Now().String(), DateDiscount) //Вставка с параметрами
 	if err != nil {
 		err = fmt.Errorf("ошибка инсета в БД:%v Запрос: %v ", err, insert)
 		return
 	}
-	log.Println("Добавлена дата отправки уведомления")
+	infoLog.Println("Добавлена дата отправки уведомления")
 	return
 }
 
 //checkEvent проверяет наличие уведомления в БД
 func СheckEvent(chatID int, numberPost string) (est bool, err error) {
+	//Подсветка ошибок и удачных сообщений
+	// colorRed := "\033[31m"
+	colorGreen := "\033[32m"
+	reset := "\033[0m"
+	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+	// errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	est = false
 	db, err := sql.Open("sqlite3", "./yadisk/sync/gibddBot/gibdd.db")
 	if err != nil {
@@ -247,7 +272,7 @@ func СheckEvent(chatID int, numberPost string) (est bool, err error) {
 	}
 	defer db.Close()
 	qwery := fmt.Sprintf("select count (*) from events where chatID = %v and numberPost = \"%v\"", chatID, numberPost)
-	log.Println(qwery)
+	infoLog.Println(qwery)
 	row := db.QueryRow(qwery)
 	var result string
 	err = row.Scan(&result)

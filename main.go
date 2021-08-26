@@ -23,15 +23,21 @@ import (
 //тоду
 //Добавить колонку с временем, до какого числа можно оплатить со скидкой и реализовать функцию по уведомлению заранее.
 func main() {
+	//Подсветка ошибок и удачных сообщений
+	colorRed := "\033[31m"
+	colorGreen := "\033[32m"
+	reset := "\033[0m"
+	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	myID, _ := strconv.Atoi(os.Getenv("myIDtelega"))
 	if myID == 0 {
 		err := fmt.Errorf("не задан myID")
-		log.Fatal(err)
+		errorLog.Fatal(err)
 	}
 	token := os.Getenv("telegaGibddToken")
 	if token == "" {
 		err := fmt.Errorf("не задан токен")
-		log.Fatal(err)
+		errorLog.Fatal(err)
 	}
 	var c string
 	var test string
@@ -42,7 +48,7 @@ func main() {
 		utils.Docker(c, test)
 		return
 	}
-	if c == "update" { //Первичная установка
+	if c == "update" { //Обновляем
 		utils.Docker(c, test)
 		return
 	}
@@ -54,22 +60,22 @@ func main() {
 	err := utils.CheckYadisk()
 	if err != nil {
 		telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
-		log.Fatal(err)
+		errorLog.Fatal(err)
 	}
 	//Создаем необходимые БД
 	err = utils.AddDB()
 	if err != nil {
-		log.Fatal(err)
+		errorLog.Fatal(err)
 	}
 	msg := "Я стартанул"
-	log.Println(msg)
+	infoLog.Println(msg)
 	telegram.SendMessage(msg, myID)
 	go func() {
 		for {
 			//Получаем офсет
 			offset, err := telegram.GetOfset()
 			if err != nil {
-				log.Printf("Ошибка получения офсета %v\n", err)
+				errorLog.Printf("Ошибка получения офсета %v\n", err)
 				time.Sleep(5 * time.Minute)
 				continue
 			}
@@ -79,7 +85,7 @@ func main() {
 			for { //Ловим все сообщения из телеги
 				message, sender, chatID, newOffset, username, err := telegram.Getupdate(offset)
 				if err != nil {
-					log.Printf("Ошибка получения сообщения %v\n", err)
+					errorLog.Printf("Ошибка получения сообщения %v\n", err)
 					time.Sleep(5 * time.Minute)
 					continue
 				}
@@ -87,7 +93,7 @@ func main() {
 					offset = newOffset
 					continue
 				}
-				log.Printf("Получено сообщение от пользователя %v chatID:%v http://t.me/%v с текстом: %v", sender, chatID, username, message)
+				infoLog.Printf("Получено сообщение от пользователя %v chatID:%v http://t.me/%v с текстом: %v", sender, chatID, username, message)
 				telegram.SendMessage(fmt.Sprintf("Debug: Получено сообщение от пользователя %v chatID:%v http://t.me/%v с текстом: %v", sender, chatID, username, message), myID) //Все сообщения боту для дебага мне
 
 				command := strings.Split(message, " ") //бьем пробелами
@@ -97,7 +103,7 @@ func main() {
 					//Сразу добавляем пользователя в базу
 					err := utils.AddUser(sender, username, chatID)
 					if err != nil {
-						log.Println(err)
+						errorLog.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
 					}
 					//Добавляем рег данные
@@ -108,18 +114,18 @@ func main() {
 					stsnum := reg[1]
 					err = utils.AddReg(regnum, regreg, stsnum, chatID)
 					if err != nil {
-						log.Println(err)
+						errorLog.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
 						telegram.SendMessage(fmt.Sprintf("Упс... %v", err), chatID)
 						break
 					}
-					log.Println("Регистрационные данные успешно добавлены")
+					infoLog.Println("Регистрационные данные успешно добавлены")
 					telegram.SendMessage("Debug: Регистрационные данные успешно добавлены", myID)
 					telegram.SendMessage("Регистрационные данные успешно добавлены", chatID)
 					//После добавления сразу делаем проверку штрафов
 					countShtaf, err := sendShtafs(regnum, regreg, stsnum, chatID, true)
 					if err != nil {
-						log.Println(err)
+						errorLog.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
 						telegram.SendMessage(fmt.Sprintf("Упс... %v", err), chatID)
 						break
@@ -145,14 +151,14 @@ func main() {
 					//Сразу добавляем пользователя в базу
 					err := utils.AddUser(sender, username, chatID)
 					if err != nil {
-						log.Println(err)
+						errorLog.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
 					}
 				case "/CHECK":
 					//Сразу добавляем пользователя в базу
 					err := utils.AddUser(sender, username, chatID)
 					if err != nil {
-						log.Println(err)
+						errorLog.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
 					}
 					printShtraf(myID, true, chatID)
@@ -160,7 +166,7 @@ func main() {
 					//Сразу добавляем пользователя в базу
 					err := utils.AddUser(sender, username, chatID)
 					if err != nil {
-						log.Println(err)
+						errorLog.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
 					}
 					telegram.SendMessage("Debug: Не корректная команда, наберите /help для справки", myID)
@@ -179,7 +185,7 @@ func main() {
 			}
 			err = sendDiscounts(myID)
 			if err != nil {
-				log.Printf("Ошибка проверки дискаунтов: %v", err)
+				errorLog.Printf("Ошибка проверки дискаунтов: %v", err)
 				telegram.SendMessage(fmt.Sprintf("Debug: Ошибка проверки дискаунтов: %v", err), myID)
 				continue
 			}
@@ -198,12 +204,18 @@ func main() {
 
 //printShtraf Печатаем штрафы в телегу
 func printShtraf(myID int, check bool, currentChatID int) {
+	//Подсветка ошибок и удачных сообщений
+	colorRed := "\033[31m"
+	// colorGreen := "\033[32m"
+	reset := "\033[0m"
+	// infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	//Получаем мапу с данными для проверки штрафов
 	mapa, err := utils.Getreg()
 	if err != nil {
 		msg := fmt.Sprintf("Debug: ошибка получения мапы: %v", err)
 		telegram.SendMessage(msg, myID)
-		log.Println(msg)
+		errorLog.Println(msg)
 		return
 	}
 	//Вызываем проверку
@@ -222,9 +234,9 @@ func printShtraf(myID int, check bool, currentChatID int) {
 
 		countShtaf, err := sendShtafs(nomer, region, sts, id, check)
 		if err != nil {
-			log.Println(err)
+			errorLog.Println(err)
 			telegram.SendMessage(fmt.Sprintf("Debug: %s следующая проверка через час", err), myID)
-			time.Sleep(60*time.Minute)
+			time.Sleep(60 * time.Minute)
 			continue
 		}
 		if check {
@@ -242,6 +254,12 @@ func printShtraf(myID int, check bool, currentChatID int) {
 
 //sendShtafs Функция отправляет штрафы по конкретному пользователю + ПТС
 func sendShtafs(nomer, region, sts string, chatID int, check bool) (countShtaf int, err error) {
+	//Подсветка ошибок и удачных сообщений
+	colorRed := "\033[31m"
+	// colorGreen := "\033[32m"
+	reset := "\033[0m"
+	// infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	log.Println("Получаем штрафы")
 	// var shtrafs []string
 	// myID, _ := strconv.Atoi(os.Getenv("myIDtelega"))
@@ -316,7 +334,7 @@ func sendShtafs(nomer, region, sts string, chatID int, check bool) (countShtaf i
 		countPhoto, err := linkImage(post, nomer+region, fmt.Sprintf("%v", divid), cafapPicsToken, shtraf.NumPost+".jpeg")
 		if err != nil {
 			err = fmt.Errorf("ошибка получения картинки со штрафом: %v", err)
-			log.Println(err)
+			errorLog.Println(err)
 			shtrafString = shtrafString + "Фото штрафа не загружено"
 			// shtrafs = append(shtrafs, shtrafString)
 		}
@@ -324,7 +342,7 @@ func sendShtafs(nomer, region, sts string, chatID int, check bool) (countShtaf i
 		if countPhoto == 0 { //Если фото нет, либо не прогрузились, отправляем как есть
 			err = telegram.SendMessage(shtrafString, chatID)
 			if err != nil {
-				log.Printf("ошибка отправки фото: %v", err)
+				errorLog.Printf("ошибка отправки фото: %v", err)
 				errSend = true //не будем добавлять инфу об отправке в БД
 			}
 		}
@@ -336,7 +354,7 @@ func sendShtafs(nomer, region, sts string, chatID int, check bool) (countShtaf i
 			// telegram.SendPhoto(fmt.Sprint(i)+shtraf.NumPost+".jpeg", "Debug: "+msg, myID)
 			err = telegram.SendPhoto(fmt.Sprint(i)+shtraf.NumPost+".jpeg", msg, chatID)
 			if err != nil {
-				log.Printf("ошибка отправки фото: %v", err)
+				errorLog.Printf("ошибка отправки фото: %v", err)
 				errSend = true
 			}
 			os.Remove("./" + fmt.Sprint(i) + shtraf.NumPost + ".jpeg")
