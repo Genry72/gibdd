@@ -166,7 +166,7 @@ func main() {
 					if err != nil {
 						errorLog.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: Сорян, на текущий момент есть проблемы с доступностью сайта gibdd:%v", err), myID)
-						telegram.SendMessage(fmt.Sprintln("Debug: Сорян, на текущий момент есть проблемы с доступностью сайта gibdd"), myID)
+						telegram.SendMessage(fmt.Sprintln("Сорян, на текущий момент есть проблемы с доступностью сайта gibdd"), chatID)
 					}
 				default:
 					//Сразу добавляем пользователя в базу
