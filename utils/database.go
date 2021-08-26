@@ -86,7 +86,7 @@ func AddUser(sender, username string, chatID int) (err error) {
 		return
 	}
 	if est { //выходим если пользоватлеь есть
-		log.Println("Пользоватлель уже есть")
+		log.Println("Пользователь уже есть")
 		return
 	}
 	log.Printf("Добавляем пользователя %v", username)
