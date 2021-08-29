@@ -1,19 +1,44 @@
 package utils
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
 //СheckRegNum Проверяем валидность введенных данных на сайте гибдд
 func СheckRegNum(nomer, region, sts string) (err error) {
+	//Задаем прокси
+	proxyHost, err := Proxy()
+	if err != nil {
+		return
+	}
+	log.Printf("Используем проксю1 %v", proxyHost)
+	proxyStr := "http://" + proxyHost
+	proxyURL, err := url.Parse(proxyStr)
+	if err != nil {
+		return
+	}
+	// basicAuth := "Basic " + logpassAdLong
+	// hdr := http.Header{}
+	// hdr.Add("Proxy-Authorization", basicAuth)
+	transport := &http.Transport{
+		Proxy: http.ProxyURL(proxyURL),
+		// ProxyConnectHeader: hdr,
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{
+		Transport: transport,
+		// Timeout:   time.Second * 10,
+	}
 	url := "https://check.gibdd.ru/proxy/check/fines"
 	method := "POST"
 	payload := strings.NewReader("regnum=" + nomer + "&regreg=" + region + "&stsnum=" + sts)
-	client := &http.Client{}
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
 		return

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"flag"
@@ -12,6 +13,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -199,6 +201,10 @@ func main() {
 		}
 
 	}()
+	go func() { //Раз в 5 минут обновляем список прокси серверов
+		utils.UpdateProxyList()
+		time.Sleep(5 * time.Minute)
+	}()
 	//В бесконечном цикле проверяем штрафы
 	for {
 		err = printShtraf(myID, false, 0)
@@ -270,12 +276,32 @@ func sendShtafs(nomer, region, sts string, chatID int, check bool) (countShtaf i
 	// infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	log.Println("Получаем штрафы")
-	// var shtrafs []string
-	// myID, _ := strconv.Atoi(os.Getenv("myIDtelega"))
+	//Задаем прокси
+	proxyHost, err := utils.Proxy()
+	if err != nil {
+		return
+	}
+	proxyStr := "http://" + proxyHost
+	proxyURL, err := url.Parse(proxyStr)
+	if err != nil {
+		return
+	}
+	log.Printf("Используем проксю2 %v", proxyHost)
+	// basicAuth := "Basic " + logpassAdLong
+	// hdr := http.Header{}
+	// hdr.Add("Proxy-Authorization", basicAuth)
+	transport := &http.Transport{
+		Proxy: http.ProxyURL(proxyURL),
+		// ProxyConnectHeader: hdr,
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{
+		Transport: transport,
+		// Timeout:   time.Second * 10,
+	}
 	url := "https://check.gibdd.ru/proxy/check/fines"
 	method := "POST"
 	payload := strings.NewReader("regnum=" + nomer + "&regreg=" + region + "&stsnum=" + sts)
-	client := &http.Client{}
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
 		err = fmt.Errorf("ошибка sendShtafs: %v", err)
