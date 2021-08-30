@@ -82,7 +82,7 @@ func Getupdate(offset int) (message, sender string, chatID int, newOffset int, u
 		return message, sender, chatID, newOffset, username, err
 	}
 	if len(m.Result) == 0 { //Таймаут по долгому запросу
-		log.Printf("Сработал таймаут Боди:%v", string(body))
+		// log.Printf("Сработал таймаут Боди:%v", string(body))
 		return message, sender, chatID, offset, username, err
 	}
 	if m.Result[0].Message.Text == "" { //Тип сообщения не текст
