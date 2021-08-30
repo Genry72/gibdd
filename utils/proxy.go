@@ -84,7 +84,7 @@ func Proxy() (proxylist []string, err error) {
 
 //Проверяем доступность прокси сервера
 func checkProxy(proxy string) (err error) {
-	times := time.Now()
+	// times := time.Now()
 	//Задаем прокси
 	proxyStr := "http://" + proxy
 	proxyURL, err := url.Parse(proxyStr)
@@ -135,7 +135,7 @@ func checkProxy(proxy string) (err error) {
 		err = fmt.Errorf("хрень в ответе %v", string(body))
 		return
 	}
-	infoLog.Printf("Годный прокси-сервер %v Время ответа %v", proxy, time.Since(times).Seconds())
+	// infoLog.Printf("Годный прокси-сервер %v Время ответа %v", proxy, time.Since(times).Seconds())
 	return
 }
 
