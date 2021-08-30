@@ -79,7 +79,7 @@ func main() {
 			//Получаем офсет
 			offset, err := telegram.GetOfset()
 			if err != nil {
-				errorLog.Printf("Ошибка получения офсета %v\n", err)
+				errorLog.Printf("Ошибка получения офсета %v ждем 5 минут\n", err)
 				time.Sleep(5 * time.Minute)
 				continue
 			}
@@ -128,13 +128,33 @@ func main() {
 					telegram.SendMessage("Debug: Регистрационные данные успешно добавлены", myID)
 					telegram.SendMessage("Регистрационные данные успешно добавлены", chatID)
 					//После добавления сразу делаем проверку штрафов
-					countShtaf, err := sendShtafs(regnum, regreg, stsnum, chatID, true)
+					proxylist, err := utils.Proxy()
 					if err != nil {
 						errorLog.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
-						telegram.SendMessage(fmt.Sprintf("Упс... %v", err), chatID)
+					}
+					var countShtaf int
+					for i, proxyHost := range proxylist {
+						countShtaf, err = sendShtafs(regnum, regreg, stsnum, chatID, true, proxyHost)
+						if err != nil {
+							if i == len(proxyHost) {
+								errorLog.Println(err)
+								telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
+								telegram.SendMessage(fmt.Sprintf("Упс... %v", err), chatID)
+								break
+							}
+							warnLog.Println(err)
+							// telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
+							// telegram.SendMessage(fmt.Sprintf("Упс... %v", err), chatID)
+							continue
+						}
+						warnLog.Println("все ок, выходим")
 						break
 					}
+					if err != nil {
+						break
+					}
+
 					if countShtaf == 0 {
 						telegram.SendMessage(fmt.Sprintf("Debug: ✅ По регистрационному номеру %v штрафов не найдено", fullRegnum), myID)
 						telegram.SendMessage(fmt.Sprintf("✅ По регистрационному номеру %v штрафов не найдено", fullRegnum), chatID)
@@ -243,13 +263,26 @@ func printShtraf(myID int, check bool, currentChatID int) (err error) {
 		nomer := string([]rune(fullRegnum)[:6])  //Первые 6 символов (номер)
 		region := string([]rune(fullRegnum)[6:]) //Обрезаем первые 6 символов (регион)
 		sts := regs[2]
-
-		countShtaf, err := sendShtafs(nomer, region, sts, id, check)
+		proxylist, err := utils.Proxy()
 		if err != nil {
 			errorLog.Println(err)
-			telegram.SendMessage(fmt.Sprintf("Debug: %s следующая проверка через час", err), myID)
-			return err
+			telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
 		}
+		var countShtaf int
+		for i, proxyHost := range proxylist {
+			countShtaf, err = sendShtafs(nomer, region, sts, id, check, proxyHost)
+			if err != nil {
+				if i == len(proxyHost)-1 {
+					errorLog.Println(err)
+					telegram.SendMessage(fmt.Sprintf("Debug: %s следующая проверка через час", err), myID)
+					return err
+				}
+				warnLog.Println(err)
+				continue
+			}
+			break
+		}
+
 		if check {
 			if countShtaf == 0 {
 				telegram.SendMessage(fmt.Sprintf("Debug: ✅ По регистрационному номеру %v штрафов не найдено", fullRegnum), myID)
@@ -271,10 +304,6 @@ func sendShtafs(nomer, region, sts string, chatID int, check bool, proxyHost str
 		infoLog.Printf("Периодическая проверка штрафов для %v%v:%v", nomer, region, sts)
 	}
 	//Задаем прокси
-	proxyHost, err := utils.Proxy()
-	if err != nil {
-		return
-	}
 	proxyStr := "http://" + proxyHost
 	proxyURL, err := url.Parse(proxyStr)
 	if err != nil {

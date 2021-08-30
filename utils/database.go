@@ -111,11 +111,18 @@ func AddReg(regnum, regreg, stsnum string, chatID int) (err error) {
 		err = fmt.Errorf("регистрационные данные были добавлены ранее")
 		return
 	}
-
-	//Проверяем валидность данных на сайте gibdd
-	err = СheckRegNum(regnum, regreg, stsnum)
-	if err != nil {
-		return
+	for i, proxyHost := range goodProxyList {
+		//Проверяем валидность данных на сайте gibdd
+		err = СheckRegNum(regnum, regreg, stsnum, proxyHost)
+		if err != nil {
+			if i == len(proxyHost)-1 {
+				err = fmt.Errorf("не удалось проверить данные %v", err)
+				return
+			}
+			warnLog.Println(err)
+			continue
+		}
+		break
 	}
 
 	log.Println("Добавляем рег данные")

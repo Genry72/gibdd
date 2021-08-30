@@ -12,13 +12,9 @@ import (
 )
 
 //СheckRegNum Проверяем валидность введенных данных на сайте гибдд
-func СheckRegNum(nomer, region, sts string) (err error) {
+func СheckRegNum(nomer, region, sts, proxyHost string) (err error) {
 	//Задаем прокси
-	proxyHost, err := Proxy()
-	if err != nil {
-		return
-	}
-	log.Printf("Используем проксю1 %v", proxyHost)
+	log.Printf("Используем проксю %v", proxyHost)
 	proxyStr := "http://" + proxyHost
 	proxyURL, err := url.Parse(proxyStr)
 	if err != nil {

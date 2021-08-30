@@ -23,6 +23,7 @@ var infoLog = log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset),
 var errorLog = log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 var warnLog = log.New(os.Stdout, fmt.Sprint(string(colorYellow), "WARN\t"+reset), log.Ldate|log.Ltime)
 var goodProxyList []string //Пустой список с хотстами прокси
+
 func UpdateProxyList() { //Бесконечно обновляет список с хостами прокси
 	goodProxyList = nil //Чистим список
 	var newUrl string
@@ -75,18 +76,7 @@ func Proxy() (proxylist []string, err error) {
 			continue
 		}
 	}
-
-	for _, host := range goodProxyList { //На всякий случай проверяем доступность прикси из хоррошего списка
-		err = checkProxy(host, 60)
-		if err != nil {
-			warnLog.Printf("Прокси-сервер %v протух", host) //Медленный способ но сохраняем порядок. Нам важен порядоок, так как в начале самые быстрые сервера
-			continue
-		}
-		proxyHost = host
-		infoLog.Printf("Выбран прокси-сервер %v", host)
-		return
-	}
-	err = fmt.Errorf("нет доступных прокси-хостов или пролема с сайтом gibdd")
+	proxylist = goodProxyList
 	return
 }
 
