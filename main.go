@@ -30,7 +30,6 @@ var reset = "\033[0m"
 var infoLog = log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
 var errorLog = log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 var warnLog = log.New(os.Stdout, fmt.Sprint(string(colorYellow), "WARN\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
-var goodProxyList []string //Пустой список с хотстами прокси
 //тоду
 //Добавить колонку с временем, до какого числа можно оплатить со скидкой и реализовать функцию по уведомлению заранее.
 func main() {
