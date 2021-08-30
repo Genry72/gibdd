@@ -24,13 +24,12 @@ var errorLog = log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset),
 var warnLog = log.New(os.Stdout, fmt.Sprint(string(colorYellow), "WARN\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 var goodProxyList []string //Пустой список с хотстами прокси
 
-func UpdateProxyList() { //Бесконечно обновляет список с хостами прокси
+func UpdateProxyList() (err error) { //Бесконечно обновляет список с хостами прокси
 	goodProxyList = nil //Чистим список
 	var newUrl string
 	url := "/ru/proxy-list/?type=h#list"
 	var proxylist []string    //Прокси-хосты, со всех страниц
 	var proxylistNew []string //Прокси-хосты, с одной страницы
-	var err error
 
 	// go func() {
 	for {
@@ -62,7 +61,13 @@ func UpdateProxyList() { //Бесконечно обновляет список 
 			goodProxyList = append(goodProxyList, proxy)
 		}(proxy)
 	}
+	if len(goodProxyList) == 0 {
+		err = fmt.Errorf("Нет годных прокси-хостов")
+		return
+	}
+	return
 }
+
 //Proxy просто проверяет готовность списка хостов
 func Proxy() (proxylist []string, err error) {
 	for i := 0; i < 5; i++ {

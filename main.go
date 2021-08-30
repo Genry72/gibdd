@@ -225,8 +225,15 @@ func main() {
 
 	}()
 	go func() { //Раз в 5 минут обновляем список прокси серверов
-		utils.UpdateProxyList()
-		time.Sleep(5 * time.Minute)
+		for {
+			err = utils.UpdateProxyList()
+			if err != nil {
+				errorLog.Println(err)
+				telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
+				continue
+			}
+			time.Sleep(5 * time.Minute)
+		}
 	}()
 	//В бесконечном цикле проверяем штрафы
 	for {
