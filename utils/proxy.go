@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bufio"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -31,24 +32,24 @@ func UpdateProxyList() (err error) { //Бесконечно обновляет �
 	var proxylist []string    //Прокси-хосты, со всех страниц
 	var proxylistNew []string //Прокси-хосты, с одной страницы
 
-	// go func() {
-	for {
+	for { //Собираем грязный список с сайта https://hidemy.name/
 		// wg.Add(1)
 		proxylistNew, newUrl, err = getProxy(url)
 		if err != nil {
 			errorLog.Println(err)
-			// wg.Done()
 			break
 		}
 		proxylist = append(proxylist, proxylistNew...)
 		if newUrl == "" {
-			// wg.Done()
 			break
 		}
 		url = newUrl
 	}
-	// }()
-	// wg.Wait()
+	proxylistNew, err = getProxyProxyscrape() //Забираем грязный список с сайта https://proxyscrape.com/
+	if err != nil {
+		errorLog.Println(err)
+	}
+	proxylist = append(proxylist, proxylistNew...)
 	infoLog.Println("Получили списки прокси-хостов со всех страниц")
 	infoLog.Println("Проверяем доступность и составляем список годных прокси-серверов")
 	//Проверяем доступность прокси хостов из общего списка, формируя при этом новый
@@ -173,6 +174,30 @@ func getProxy(url string) (proxyList []string, newUrl string, err error) {
 		// fmt.Println(newUrl, s.Text())
 	})
 	// log.Println(proxyList)
+	return
+}
+
+func getProxyProxyscrape() (proxyList []string, err error) {
+	url := "https://api.proxyscrape.com/v2/?request=getproxies&protocol=http&timeout=10000&country=RU&ssl=all&anonymity=all&simplified=true"
+	method := "GET"
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		return
+	}
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return
+	}
+	scanner := bufio.NewScanner(strings.NewReader(string(body))) //Построчно читаем что прилетело в канал
+	for scanner.Scan() {
+		proxyList = append(proxyList, scanner.Text())
+	}
 	return
 }
 
