@@ -49,7 +49,7 @@ func GetOfset() (offset int, err error) {
 }
 
 func Getupdate(offset int) (message, sender string, chatID int, newOffset int, username string, err error) {
-	log.Printf("Получаем сообщения из телеги, офсет %v", offset)
+	// log.Printf("Получаем сообщения из телеги, офсет %v", offset)
 	token := os.Getenv("telegaGibddToken")
 	if token == "" {
 		err = fmt.Errorf("не задан токен")
