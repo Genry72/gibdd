@@ -61,10 +61,6 @@ func UpdateProxyList() (err error) { //Бесконечно обновляет �
 			goodProxyList = append(goodProxyList, proxy)
 		}(proxy)
 	}
-	if len(goodProxyList) == 0 {
-		err = fmt.Errorf("Нет годных прокси-хостов")
-		return
-	}
 	return
 }
 
