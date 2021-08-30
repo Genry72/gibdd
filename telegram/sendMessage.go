@@ -14,13 +14,15 @@ import (
 	"strings"
 )
 
+var colorRed = "\033[31m"
+// var colorGreen = "\033[32m"
+// var colorYellow = "\033[33m"
+var reset = "\033[0m"
+// var infoLog = log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+var errorLog = log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
+// var warnLog = log.New(os.Stdout, fmt.Sprint(string(colorYellow), "WARN\t"+reset), log.Ldate|log.Ltime)
+
 func SendMessage(message string, chatid int) (err error) {
-	//Подсветка ошибок и удачных сообщений
-	colorRed := "\033[31m"
-	// colorGreen := "\033[32m"
-	reset := "\033[0m"
-	// infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	token := os.Getenv("telegaGibddToken")
 	url := "https://api.telegram.org/bot" + token + "/sendMessage"
 	method := "POST"
@@ -64,12 +66,6 @@ func SendMessage(message string, chatid int) (err error) {
 
 //SendPhoto отправка фото
 func SendPhoto(photoName, message string, chatid int) (err error) {
-	//Подсветка ошибок и удачных сообщений
-	colorRed := "\033[31m"
-	// colorGreen := "\033[32m"
-	reset := "\033[0m"
-	// infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	token := os.Getenv("telegaGibddToken")
 	if token == "" {
 		err = fmt.Errorf("не задан токен")

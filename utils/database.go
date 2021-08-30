@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 	"time"
 )
 
@@ -67,12 +66,6 @@ func AddDB() (err error) {
 
 //AddUser Добавление пользователя в БД
 func AddUser(sender, username string, chatID int) (err error) {
-	//Подсветка ошибок и удачных сообщений
-	// colorRed := "\033[31m"
-	colorGreen := "\033[32m"
-	reset := "\033[0m"
-	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
-	// errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	db, err := sql.Open("sqlite3", "./yadisk/sync/gibddBot/gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
@@ -103,12 +96,6 @@ func AddUser(sender, username string, chatID int) (err error) {
 
 //AddReg Добавление регистрационные данные в БД
 func AddReg(regnum, regreg, stsnum string, chatID int) (err error) {
-	//Подсветка ошибок и удачных сообщений
-	// colorRed := "\033[31m"
-	colorGreen := "\033[32m"
-	reset := "\033[0m"
-	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
-	// errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	db, err := sql.Open("sqlite3", "./yadisk/sync/gibddBot/gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
@@ -223,12 +210,6 @@ func Getreg() (mapa map[int][]string, err error) {
 
 //AddEvent Добавляем дату отправки уведомления
 func AddEvent(chatID int, numberPost, DateDiscount string) (err error) {
-	//Подсветка ошибок и удачных сообщений
-	// colorRed := "\033[31m"
-	colorGreen := "\033[32m"
-	reset := "\033[0m"
-	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
-	// errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	db, err := sql.Open("sqlite3", "./yadisk/sync/gibddBot/gibdd.db")
 	if err != nil {
 		err = fmt.Errorf("ошибка создания БД:%v", err)
@@ -258,12 +239,6 @@ func AddEvent(chatID int, numberPost, DateDiscount string) (err error) {
 
 //checkEvent проверяет наличие уведомления в БД
 func СheckEvent(chatID int, numberPost string) (est bool, err error) {
-	//Подсветка ошибок и удачных сообщений
-	// colorRed := "\033[31m"
-	colorGreen := "\033[32m"
-	reset := "\033[0m"
-	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
-	// errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	est = false
 	db, err := sql.Open("sqlite3", "./yadisk/sync/gibddBot/gibdd.db")
 	if err != nil {

@@ -15,13 +15,15 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+var colorRed = "\033[31m"
+var colorGreen = "\033[32m"
+var colorYellow = "\033[33m"
+var reset = "\033[0m"
+var infoLog = log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+var errorLog = log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
+var warnLog = log.New(os.Stdout, fmt.Sprint(string(colorYellow), "WARN\t"+reset), log.Ldate|log.Ltime)
 var goodProxyList []string //Пустой список с хотстами прокси
 func UpdateProxyList() { //Бесконечно обновляет список с хостами прокси
-	colorRed := "\033[31m"
-	colorGreen := "\033[32m"
-	reset := "\033[0m"
-	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	goodProxyList = nil //Чистим список
 	var newUrl string
 	url := "/ru/proxy-list/?type=h#list"
@@ -60,15 +62,8 @@ func UpdateProxyList() { //Бесконечно обновляет список 
 		}(proxy)
 	}
 }
-func Proxy() (proxyHost string, err error) {
-	// colorRed := "\033[31m"
-	colorGreen := "\033[32m"
-	colorYellow := "\033[33m"
-	reset := "\033[0m"
-	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
-	// errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
-	warnLog := log.New(os.Stdout, fmt.Sprint(string(colorYellow), "WARN\t"+reset), log.Ldate|log.Ltime)
-	infoLog.Println("Ищем проксю по имеющемуся списку")
+//Proxy просто проверяет готовность списка хостов
+func Proxy() (proxylist []string, err error) {
 	for i := 0; i < 5; i++ {
 		if len(goodProxyList) == 0 {
 			if i == 4 {
@@ -98,12 +93,6 @@ func Proxy() (proxyHost string, err error) {
 //Проверяем доступность прокси сервера
 func checkProxy(proxy string, seconds int) (err error) {
 	times := time.Now()
-	// colorRed := "\033[31m"
-	colorGreen := "\033[32m"
-	reset := "\033[0m"
-	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
-	// errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
-	// infoLog.Printf("Проверяем доступность %v", proxy)
 	//Задаем прокси
 	proxyStr := "http://" + proxy
 	proxyURL, err := url.Parse(proxyStr)

@@ -22,15 +22,17 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+var colorRed = "\033[31m"
+var colorGreen = "\033[32m"
+var colorYellow = "\033[33m"
+var reset = "\033[0m"
+var infoLog = log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+var errorLog = log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
+var warnLog = log.New(os.Stdout, fmt.Sprint(string(colorYellow), "WARN\t"+reset), log.Ldate|log.Ltime)
+var goodProxyList []string //Пустой список с хотстами прокси
 //тоду
 //Добавить колонку с временем, до какого числа можно оплатить со скидкой и реализовать функцию по уведомлению заранее.
 func main() {
-	//Подсветка ошибок и удачных сообщений
-	colorRed := "\033[31m"
-	colorGreen := "\033[32m"
-	reset := "\033[0m"
-	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	myID, _ := strconv.Atoi(os.Getenv("myIDtelega"))
 	if myID == 0 {
 		err := fmt.Errorf("не задан myID")
@@ -220,12 +222,6 @@ func main() {
 
 //printShtraf Печатаем штрафы в телегу
 func printShtraf(myID int, check bool, currentChatID int) (err error) {
-	//Подсветка ошибок и удачных сообщений
-	colorRed := "\033[31m"
-	// colorGreen := "\033[32m"
-	reset := "\033[0m"
-	// infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	//Получаем мапу с данными для проверки штрафов
 	mapa, err := utils.Getreg()
 	if err != nil {
@@ -268,14 +264,12 @@ func printShtraf(myID int, check bool, currentChatID int) (err error) {
 }
 
 //sendShtafs Функция отправляет штрафы по конкретному пользователю + ПТС
-func sendShtafs(nomer, region, sts string, chatID int, check bool) (countShtaf int, err error) {
-	//Подсветка ошибок и удачных сообщений
-	colorRed := "\033[31m"
-	colorGreen := "\033[32m"
-	reset := "\033[0m"
-	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
-	infoLog.Printf("Проверяем штары для %v%v:%v", nomer, region, sts)
+func sendShtafs(nomer, region, sts string, chatID int, check bool, proxyHost string) (countShtaf int, err error) {
+	if check {
+		infoLog.Printf("Запрошенная проверка штрафов для %v%v:%v", nomer, region, sts)
+	} else {
+		infoLog.Printf("Периодическая проверка штрафов для %v%v:%v", nomer, region, sts)
+	}
 	//Задаем прокси
 	proxyHost, err := utils.Proxy()
 	if err != nil {

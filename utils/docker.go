@@ -9,12 +9,6 @@ import (
 )
 
 func Docker(command, test string) {
-	//Подсветка ошибок и удачных сообщений
-	colorRed := "\033[31m"
-	colorGreen := "\033[32m"
-	reset := "\033[0m"
-	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	var localCommands []string
 	var remoteCommands []string
 	if os.Getenv("iidYandex") == "" || os.Getenv("passwdYandex") == "" {
@@ -142,12 +136,6 @@ func Docker(command, test string) {
 
 //localCmd выполнение команд на локальном хосте
 func localCmd(localCommands []string) {
-	//Подсветка ошибок и удачных сообщений
-	colorRed := "\033[31m"
-	// colorGreen := "\033[32m"
-	reset := "\033[0m"
-	// infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 	for _, command := range localCommands {
 		cmd := exec.Command("bash", "-c", command)
 		cmd.Stdout = os.Stdout
