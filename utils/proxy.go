@@ -48,10 +48,11 @@ func UpdateProxyList() { //Бесконечно обновляет список 
 	// }()
 	// wg.Wait()
 	infoLog.Println("Получили списки прокси-хостов со всех страниц")
+	infoLog.Println("Проверяем доступность и составляем список годных прокси-серверов")
 	//Проверяем доступность прокси хостов из общего списка, формируя при этом новый
 	for _, proxy := range proxylist {
 		go func(proxy string) {
-			err = checkProxy(proxy)
+			err = checkProxy(proxy, 10)
 			if err != nil {
 				return
 			}
@@ -60,26 +61,34 @@ func UpdateProxyList() { //Бесконечно обновляет список 
 	}
 }
 func Proxy() (proxyHost string, err error) {
-	log.Println("Ищем проксю")
+	// colorRed := "\033[31m"
+	colorGreen := "\033[32m"
+	colorYellow := "\033[33m"
+	reset := "\033[0m"
+	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+	// errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
+	warnLog := log.New(os.Stdout, fmt.Sprint(string(colorYellow), "WARN\t"+reset), log.Ldate|log.Ltime)
+	infoLog.Println("Ищем проксю по имеющемуся списку")
 	for i := 0; i < 5; i++ {
 		if len(goodProxyList) == 0 {
 			if i == 4 {
 				err = fmt.Errorf("пустой список прикси-серверов. Нет живых прокси или проблема с доступностью сайта gibdd")
 				return
 			}
-			log.Println("Пустой список прокси серверов, ждем")
+			warnLog.Println("Пустой список прокси серверов, ждем")
 			time.Sleep(1 * time.Minute)
 			continue
 		}
 	}
 
 	for _, host := range goodProxyList { //На всякий случай проверяем доступность прикси из хоррошего списка
-		err = checkProxy(host)
+		err = checkProxy(host, 60)
 		if err != nil {
-			log.Printf("Прокси-сервер %v протух", host) //Медленный способ но сохраняем порядок. Нам важен порядоок, так как в начале самые быстрые сервера
+			warnLog.Printf("Прокси-сервер %v протух", host) //Медленный способ но сохраняем порядок. Нам важен порядоок, так как в начале самые быстрые сервера
 			continue
 		}
 		proxyHost = host
+		infoLog.Printf("Выбран прокси-сервер %v", host)
 		return
 	}
 	err = fmt.Errorf("нет доступных прокси-хостов или пролема с сайтом gibdd")
@@ -87,14 +96,14 @@ func Proxy() (proxyHost string, err error) {
 }
 
 //Проверяем доступность прокси сервера
-func checkProxy(proxy string) (err error) {
+func checkProxy(proxy string, seconds int) (err error) {
 	times := time.Now()
 	// colorRed := "\033[31m"
 	colorGreen := "\033[32m"
 	reset := "\033[0m"
 	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
 	// errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
-	infoLog.Printf("Проверяем доступность %v", proxy)
+	// infoLog.Printf("Проверяем доступность %v", proxy)
 	//Задаем прокси
 	proxyStr := "http://" + proxy
 	proxyURL, err := url.Parse(proxyStr)
@@ -111,7 +120,7 @@ func checkProxy(proxy string) (err error) {
 	}
 	client := &http.Client{
 		Transport: transport,
-		Timeout:   time.Second * 10,
+		Timeout:   time.Duration(seconds) * time.Second,
 	}
 	url := "https://check.gibdd.ru/proxy/check/fines"
 	method := "POST"
@@ -145,7 +154,7 @@ func checkProxy(proxy string) (err error) {
 		err = fmt.Errorf("хрень в ответе %v", string(body))
 		return
 	}
-	infoLog.Printf("Прокся: %v Боди: %v код: %v %v", proxy, string(body), res.StatusCode, time.Since(times).Seconds())
+	infoLog.Printf("Годный прокси-сервер %v Время ответа %v", proxy, time.Since(times).Seconds())
 	return
 }
 
@@ -181,9 +190,9 @@ func getProxy(url string) (proxyList []string, newUrl string, err error) {
 	doc.Find(".next_array").Each(func(i int, s *goquery.Selection) {
 		qq := s.Find("a")
 		newUrl, _ = qq.Attr("href")
-		fmt.Println(newUrl, s.Text())
+		// fmt.Println(newUrl, s.Text())
 	})
-	log.Println(proxyList)
+	// log.Println(proxyList)
 	return
 }
 

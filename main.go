@@ -81,7 +81,7 @@ func main() {
 				time.Sleep(5 * time.Minute)
 				continue
 			}
-			infoLog.Printf("Получили офсет %v", offset)
+			// infoLog.Printf("Получили офсет %v", offset)
 			if offset == 0 {
 				continue
 			}
@@ -271,11 +271,11 @@ func printShtraf(myID int, check bool, currentChatID int) (err error) {
 func sendShtafs(nomer, region, sts string, chatID int, check bool) (countShtaf int, err error) {
 	//Подсветка ошибок и удачных сообщений
 	colorRed := "\033[31m"
-	// colorGreen := "\033[32m"
+	colorGreen := "\033[32m"
 	reset := "\033[0m"
-	// infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
+	infoLog := log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
-	log.Println("Получаем штрафы")
+	infoLog.Printf("Проверяем штары для %v%v:%v", nomer, region, sts)
 	//Задаем прокси
 	proxyHost, err := utils.Proxy()
 	if err != nil {
@@ -402,6 +402,7 @@ func sendShtafs(nomer, region, sts string, chatID int, check bool) (countShtaf i
 		}
 
 	}
+	infoLog.Printf("Успешная провеока штрафов для %v%v:%v", nomer, region, sts)
 	return
 }
 
