@@ -1,14 +1,10 @@
 module gibdd
 
-go 1.15
-
-replace gibdd/telegram => ./telegram
-
-replace gibdd/utils => ./utils
+go 1.16
 
 require (
-	gibdd/telegram v0.0.0-00010101000000-000000000000
-	gibdd/utils v0.0.0-00010101000000-000000000000
-	github.com/PuerkitoBio/goquery v1.7.1 // indirect
-	github.com/mattn/go-sqlite3 v1.14.7
+	github.com/PuerkitoBio/goquery v1.7.1
+	github.com/mattn/go-sqlite3 v1.14.8
+	github.com/pkg/sftp v1.13.2
+	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 )
