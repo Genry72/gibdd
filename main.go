@@ -137,7 +137,7 @@ func main() {
 					for i, proxyHost := range proxylist {
 						countShtaf, err = sendShtafs(regnum, regreg, stsnum, chatID, true, proxyHost)
 						if err != nil {
-							if i == len(proxyHost) {
+							if i == len(proxylist)-1 {
 								errorLog.Println(err)
 								telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
 								telegram.SendMessage(fmt.Sprintf("Упс... %v", err), chatID)
