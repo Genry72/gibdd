@@ -368,7 +368,7 @@ func sendShtafs(nomer, region, sts string, chatID int, check bool, proxyHost str
 	countShtaf = len(m.Data)
 	if check {
 		if countShtaf == 0 {
-			infoLog.Printf("Успешная провеока штрафов для %v%v:%v", nomer, region, sts)
+			infoLog.Printf("Успешная проверка штрафов для %v%v:%v", nomer, region, sts)
 			return
 		}
 	}
@@ -433,7 +433,7 @@ func sendShtafs(nomer, region, sts string, chatID int, check bool, proxyHost str
 		}
 
 	}
-	infoLog.Printf("Успешная провеока штрафов для %v%v:%v", nomer, region, sts)
+	infoLog.Printf("Успешная проверка штрафов для %v%v:%v", nomer, region, sts)
 	return
 }
 
