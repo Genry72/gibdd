@@ -32,7 +32,8 @@ var errorLog = log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset),
 var warnLog = log.New(os.Stdout, fmt.Sprint(string(colorYellow), "WARN\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 
 //тоду
-//Добавить колонку с временем, до какого числа можно оплатить со скидкой и реализовать функцию по уведомлению заранее.
+//команду check нужно выдавать на основе данных из бд, указывая дату последней проверки
+//долгие ответы обернуть "проверяем, ожидайте"
 func main() {
 	myID, _ := strconv.Atoi(os.Getenv("myIDtelega"))
 	if myID == 0 {
@@ -305,9 +306,12 @@ func printShtraf(myID int, check bool, currentChatID int) (err error) {
 				telegram.SendMessage(fmt.Sprintf("Debug: ❗️❗️ Колличество штрафов по номеру %v: %v", fullRegnum, countShtaf), myID)
 				telegram.SendMessage(fmt.Sprintf("❗️❗️ Колличество штрафов по номеру %v: %v", fullRegnum, countShtaf), currentChatID)
 			}
+			wg.Done()
 			return err
 		}(chatID, regs)
 	}
+	wg.Wait()
+	infoLog.Println("Проверка штрафов по всем рег. данным прошла")
 	return
 }
 
