@@ -115,11 +115,14 @@ func AddReg(regnum, regreg, stsnum string, chatID int) (err error) {
 		//Проверяем валидность данных на сайте gibdd
 		err = СheckRegNum(regnum, regreg, stsnum, proxyHost)
 		if err != nil {
-			if i == len(proxyHost)-1 {
+			if i == len(goodProxyList)-1 {
 				err = fmt.Errorf("не удалось проверить данные %v", err)
 				return
 			}
 			warnLog.Println(err)
+			if err.Error() == "Не найдено ТС с таким сочетанием СТС и ГРЗ" {
+				return
+			}
 			continue
 		}
 		break
