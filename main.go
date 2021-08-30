@@ -30,6 +30,7 @@ var reset = "\033[0m"
 var infoLog = log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
 var errorLog = log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 var warnLog = log.New(os.Stdout, fmt.Sprint(string(colorYellow), "WARN\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
+
 //тоду
 //Добавить колонку с временем, до какого числа можно оплатить со скидкой и реализовать функцию по уведомлению заранее.
 func main() {
@@ -268,7 +269,7 @@ func printShtraf(myID int, check bool, currentChatID int) (err error) {
 			}
 		}
 		wg.Add(1)
-		go func(chatID string, regs []string) {
+		go func(chatID string, regs []string) error {
 			fullRegnum := regs[1]                    //Полный номер, включая регион
 			nomer := string([]rune(fullRegnum)[:6])  //Первые 6 символов (номер)
 			region := string([]rune(fullRegnum)[6:]) //Обрезаем первые 6 символов (регион)
@@ -283,12 +284,12 @@ func printShtraf(myID int, check bool, currentChatID int) (err error) {
 				countShtaf, err = sendShtafs(nomer, region, sts, id, check, proxyHost)
 				if err != nil {
 					if i == len(proxylist)-1 {
-						errorLog.Println(err)
+						errorLog.Printf("%v проверка %v из %v", err, i+1, len(proxylist))
 						telegram.SendMessage(fmt.Sprintf("Debug: %s следующая проверка через час", err), myID)
 						wg.Done()
-						return
+						return err
 					}
-					warnLog.Println(err)
+					warnLog.Printf("%v проверка %v из %v", err, i+1, len(proxylist))
 					continue
 				}
 				break
@@ -299,11 +300,12 @@ func printShtraf(myID int, check bool, currentChatID int) (err error) {
 					telegram.SendMessage(fmt.Sprintf("Debug: ✅ По регистрационному номеру %v штрафов не найдено", fullRegnum), myID)
 					telegram.SendMessage(fmt.Sprintf("✅ По регистрационному номеру %v штрафов не найдено", fullRegnum), currentChatID)
 					wg.Done()
-					return
+					return err
 				}
 				telegram.SendMessage(fmt.Sprintf("Debug: ❗️❗️ Колличество штрафов по номеру %v: %v", fullRegnum, countShtaf), myID)
 				telegram.SendMessage(fmt.Sprintf("❗️❗️ Колличество штрафов по номеру %v: %v", fullRegnum, countShtaf), currentChatID)
 			}
+			return err
 		}(chatID, regs)
 	}
 	return
@@ -322,7 +324,7 @@ func sendShtafs(nomer, region, sts string, chatID int, check bool, proxyHost str
 	if err != nil {
 		return
 	}
-	log.Printf("Используем проксю2 %v", proxyHost)
+	infoLog.Printf("Используем проксю2 %v", proxyHost)
 	// basicAuth := "Basic " + logpassAdLong
 	// hdr := http.Header{}
 	// hdr.Add("Proxy-Authorization", basicAuth)
@@ -333,7 +335,7 @@ func sendShtafs(nomer, region, sts string, chatID int, check bool, proxyHost str
 	}
 	client := &http.Client{
 		Transport: transport,
-		// Timeout:   time.Second * 10,
+		Timeout:   time.Second * 60,
 	}
 	url := "https://check.gibdd.ru/proxy/check/fines"
 	method := "POST"
@@ -347,7 +349,7 @@ func sendShtafs(nomer, region, sts string, chatID int, check bool, proxyHost str
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
 	res, err := client.Do(req)
 	if err != nil {
-		err = fmt.Errorf("ошибка sendShtafs: %v", err)
+		err = fmt.Errorf("ошибка проверки штрафа для %v%v:%v %v", nomer, region, sts, err)
 		return
 	}
 	defer res.Body.Close()

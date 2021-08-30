@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 //СheckRegNum Проверяем валидность введенных данных на сайте гибдд
@@ -30,7 +31,7 @@ func СheckRegNum(nomer, region, sts, proxyHost string) (err error) {
 	}
 	client := &http.Client{
 		Transport: transport,
-		// Timeout:   time.Second * 10,
+		Timeout:   time.Second * 60,
 	}
 	url := "https://check.gibdd.ru/proxy/check/fines"
 	method := "POST"

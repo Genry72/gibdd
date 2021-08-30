@@ -54,7 +54,7 @@ func UpdateProxyList() (err error) { //Бесконечно обновляет �
 	//Проверяем доступность прокси хостов из общего списка, формируя при этом новый
 	for _, proxy := range proxylist {
 		go func(proxy string) {
-			err = checkProxy(proxy, 10)
+			err = checkProxy(proxy)
 			if err != nil {
 				return
 			}
@@ -82,7 +82,7 @@ func Proxy() (proxylist []string, err error) {
 }
 
 //Проверяем доступность прокси сервера
-func checkProxy(proxy string, seconds int) (err error) {
+func checkProxy(proxy string) (err error) {
 	times := time.Now()
 	//Задаем прокси
 	proxyStr := "http://" + proxy
@@ -100,7 +100,7 @@ func checkProxy(proxy string, seconds int) (err error) {
 	}
 	client := &http.Client{
 		Transport: transport,
-		Timeout:   time.Duration(seconds) * time.Second,
+		Timeout:   30 * time.Second,
 	}
 	url := "https://check.gibdd.ru/proxy/check/fines"
 	method := "POST"
