@@ -15,18 +15,21 @@ import (
 )
 
 var colorRed = "\033[31m"
+
 // var colorGreen = "\033[32m"
 // var colorYellow = "\033[33m"
 var reset = "\033[0m"
+
 // var infoLog = log.New(os.Stdout, fmt.Sprint(string(colorGreen), "INFO\t"+reset), log.Ldate|log.Ltime)
 var errorLog = log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
+
 // var warnLog = log.New(os.Stdout, fmt.Sprint(string(colorYellow), "WARN\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 
 func SendMessage(message string, chatid int) (err error) {
 	token := os.Getenv("telegaGibddToken")
 	url := "https://api.telegram.org/bot" + token + "/sendMessage"
 	method := "POST"
-	payload := strings.NewReader("chat_id=" + fmt.Sprint(chatid) + "&text=" + message)
+	payload := strings.NewReader("chat_id=" + fmt.Sprint(chatid) + "&text=" + message + "&parse_mode=markdown")
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
