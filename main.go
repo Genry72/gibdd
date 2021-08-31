@@ -33,7 +33,6 @@ var warnLog = log.New(os.Stdout, fmt.Sprint(string(colorYellow), "WARN\t"+reset)
 
 //тоду
 //команду check нужно выдавать на основе данных из бд, указывая дату последней проверки
-//долгие ответы обернуть "проверяем, ожидайте"
 func main() {
 	myID, _ := strconv.Atoi(os.Getenv("myIDtelega"))
 	if myID == 0 {
@@ -119,51 +118,29 @@ func main() {
 					regnum := string([]rune(fullRegnum)[:6])               //Первые 6 символов (номер)
 					regreg := string([]rune(fullRegnum)[6:])               //Обрезаем первые 6 символов (регион)
 					stsnum := reg[1]
-					err = utils.AddReg(regnum, regreg, stsnum, chatID)
-					if err != nil {
-						errorLog.Println(err)
-						telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
-						telegram.SendMessage(fmt.Sprintf("Упс... %v", err), chatID)
-						break
-					}
-					infoLog.Println("Регистрационные данные успешно добавлены")
-					telegram.SendMessage("Debug: Регистрационные данные успешно добавлены", myID)
-					telegram.SendMessage("Регистрационные данные успешно добавлены", chatID)
-					//После добавления сразу делаем проверку штрафов
-					proxylist, err := utils.Proxy()
-					if err != nil {
-						errorLog.Println(err)
-						telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
-					}
-					var countShtaf int
-					for i, proxyHost := range proxylist {
-						countShtaf, err = sendShtafs(regnum, regreg, stsnum, chatID, true, proxyHost)
+					go func() {
+						telegram.SendMessage(fmt.Sprintln("Debug: Проверяем корректность введенных данных, ожидайте"), myID)
+						telegram.SendMessage(fmt.Sprintln("Проверяем корректность введенных данных, ожидайте"), chatID)
+						err = utils.AddReg(regnum, regreg, stsnum, chatID)
 						if err != nil {
-							if i == len(proxylist)-1 {
-								errorLog.Println(err)
-								telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
-								telegram.SendMessage(fmt.Sprintf("Упс... %v", err), chatID)
-								break
-							}
-							warnLog.Println(err)
-							// telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
-							// telegram.SendMessage(fmt.Sprintf("Упс... %v", err), chatID)
-							continue
+							errorLog.Println(err)
+							telegram.SendMessage(fmt.Sprintf("Debug: %v", err), myID)
+							telegram.SendMessage(fmt.Sprintf("Упс... %v", err), chatID)
+							return
 						}
-						warnLog.Println("все ок, выходим")
-						break
-					}
-					if err != nil {
-						break
-					}
-
-					if countShtaf == 0 {
-						telegram.SendMessage(fmt.Sprintf("Debug: ✅ По регистрационному номеру %v штрафов не найдено", fullRegnum), myID)
-						telegram.SendMessage(fmt.Sprintf("✅ По регистрационному номеру %v штрафов не найдено", fullRegnum), chatID)
-						break
-					}
-					telegram.SendMessage(fmt.Sprintf("Debug: ❗️❗️Колличество штрафов по номеру %v: %v", fullRegnum, countShtaf), myID)
-					telegram.SendMessage(fmt.Sprintf("❗️❗️Колличество штрафов по номеру %v: %v", fullRegnum, countShtaf), chatID)
+						infoLog.Println("Регистрационные данные успешно добавлены")
+						telegram.SendMessage("Debug: Регистрационные данные успешно добавлены", myID)
+						telegram.SendMessage("Регистрационные данные успешно добавлены", chatID)
+						//После добавления сразу делаем проверку штрафов
+						telegram.SendMessage(fmt.Sprintln("Debug: Идет проверка штрафов, ожидайте"), myID)
+						telegram.SendMessage(fmt.Sprintln("Идет проверка штрафов, ожидайте"), chatID)
+						err = printShtraf(myID, true, chatID)
+						if err != nil {
+							errorLog.Println(err)
+							telegram.SendMessage(fmt.Sprintf("Debug: Сорян, на текущий момент есть проблемы с доступностью сайта gibdd:%v", err), myID)
+							telegram.SendMessage(fmt.Sprintln("Сорян, на текущий момент есть проблемы с доступностью сайта gibdd"), chatID)
+						}
+					}()
 				case "/START", "/HELP":
 					telegram.SendMessage(`
 Бот находится на этапе разрабоки!
@@ -188,12 +165,16 @@ func main() {
 						errorLog.Println(err)
 						telegram.SendMessage(fmt.Sprintf("Debug: %s", err), myID)
 					}
-					err = printShtraf(myID, true, chatID)
-					if err != nil {
-						errorLog.Println(err)
-						telegram.SendMessage(fmt.Sprintf("Debug: Сорян, на текущий момент есть проблемы с доступностью сайта gibdd:%v", err), myID)
-						telegram.SendMessage(fmt.Sprintln("Сорян, на текущий момент есть проблемы с доступностью сайта gibdd"), chatID)
-					}
+					go func() {
+						telegram.SendMessage(fmt.Sprintln("Debug: Идет проверка штрафов, ожидайте"), myID)
+						telegram.SendMessage(fmt.Sprintln("Идет проверка штрафов, ожидайте"), chatID)
+						err = printShtraf(myID, true, chatID)
+						if err != nil {
+							errorLog.Println(err)
+							telegram.SendMessage(fmt.Sprintf("Debug: Сорян, на текущий момент есть проблемы с доступностью сайта gibdd:%v", err), myID)
+							telegram.SendMessage(fmt.Sprintln("Сорян, на текущий момент есть проблемы с доступностью сайта gibdd"), chatID)
+						}
+					}()
 				default:
 					//Сразу добавляем пользователя в базу
 					err := utils.AddUser(sender, username, chatID)
