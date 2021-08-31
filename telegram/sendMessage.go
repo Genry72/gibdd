@@ -25,11 +25,14 @@ var errorLog = log.New(os.Stderr, fmt.Sprint(string(colorRed), "ERROR\t"+reset),
 
 // var warnLog = log.New(os.Stdout, fmt.Sprint(string(colorYellow), "WARN\t"+reset), log.Ldate|log.Ltime|log.Lshortfile)
 
-func SendMessage(message string, chatid int) (err error) {
+func SendMessage(message string, chatid int, reply_to string) (err error) {
+	if reply_to != "" {
+		reply_to = "&reply_to_message_id=" + reply_to
+	}
 	token := os.Getenv("telegaGibddToken")
 	url := "https://api.telegram.org/bot" + token + "/sendMessage"
 	method := "POST"
-	payload := strings.NewReader("chat_id=" + fmt.Sprint(chatid) + "&text=" + message + "&parse_mode=markdown")
+	payload := strings.NewReader("chat_id=" + fmt.Sprint(chatid) + "&text=" + message + "&parse_mode=markdown" + reply_to)
 	client := &http.Client{}
 	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
