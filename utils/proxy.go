@@ -62,7 +62,7 @@ func UpdateProxyList() (err error) { //Бесконечно обновляет �
 			goodProxyList = append(goodProxyList, proxy)
 		}(proxy)
 	}
-	return
+	return nil //Зануляем, так как пробрасывается из функции getProxyProxyscrape
 }
 
 //Proxy просто проверяет готовность списка хостов
