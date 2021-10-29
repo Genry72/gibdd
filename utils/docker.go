@@ -33,14 +33,31 @@ func Docker(command, test string) {
 			"echo auth=\"/home/node/.config/yandex-disk/passwd\" > ./tmp/yandex-disk-config/config.cfg",
 			"echo dir=\"/home/node/yadisk\" >> ./tmp/yandex-disk-config/config.cfg",
 			"echo proxy=\"no\" >> ./tmp/yandex-disk-config/config.cfg",
+
 			"GOOS=linux go build -o ./tmp/gibdd ./main.go", //Билдим бинарник
 			"tar -czf ./tmp/install.tar.gz ./tmp/gibdd ./env ./makefile ./yandexDisk.Dockerfile ./Dockerfile ./Base.Dockerfile ./tmp/yandex-disk-config",
+		}
+		if runtime.GOOS == "darwin" { //Если это мак, то компилим в контейнере
+			infoLog.Println("Компилируем исходник в контейнере")
+			localCommands = []string{
+				"mkdir ./tmp",
+				"mkdir ./tmp/yandex-disk-config", //Создаем папку с конфигом для подключения к диску
+				"echo $iidYandex > ./tmp/yandex-disk-config/iid",
+				"echo $passwdYandex > ./tmp/yandex-disk-config/passwd",
+				"echo auth=\"/home/node/.config/yandex-disk/passwd\" > ./tmp/yandex-disk-config/config.cfg",
+				"echo dir=\"/home/node/yadisk\" >> ./tmp/yandex-disk-config/config.cfg",
+				"echo proxy=\"no\" >> ./tmp/yandex-disk-config/config.cfg",
+
+				"make build",
+				"docker rmi $(docker images | grep build | awk '{print $3}')",
+				"tar -czf ./tmp/install.tar.gz ./tmp/gibdd ./env ./makefile ./yandexDisk.Dockerfile ./Dockerfile ./Base.Dockerfile ./tmp/yandex-disk-config",
+			}
 		}
 		localCmd(localCommands)
 		//Отправляем файл на хост
 		infoLog.Println("Собрали локальный архив")
 		infoLog.Println("Отправляем архив на сервер")
-		err := CopyFileToHost("./tmp/install.tar.gz", "./install.tar.gz", os.Getenv("remoteUser"), "./id_rsa", os.Getenv("remoteHost"), test)
+		err := CopyFileToHost("./tmp/install.tar.gz", "./install.tar.gz", os.Getenv("remoteUser"), os.Getenv("HOME")+"/.ssh/id_rsa", os.Getenv("remoteHost"), test)
 		if err != nil {
 			log.Println(err)
 			return
@@ -66,7 +83,7 @@ func Docker(command, test string) {
 			"exit",
 			// "exit",
 		}
-		err = SshExec(os.Getenv("remoteHost"), "./id_rsa", os.Getenv("remoteUser"), remoteCommands, test)
+		err = SshExec(os.Getenv("remoteHost"), os.Getenv("HOME")+"/.ssh/id_rsa", os.Getenv("remoteUser"), remoteCommands, test)
 		if err != nil {
 			errorLog.Println(err)
 		}
@@ -93,7 +110,7 @@ func Docker(command, test string) {
 		//Отправляем файл на хост
 		infoLog.Println("Собрали локальный архив")
 
-		err := CopyFileToHost("./tmp/install.tar.gz", "./install.tar.gz", os.Getenv("remoteUser"), "./id_rsa", os.Getenv("remoteHost"), test)
+		err := CopyFileToHost("./tmp/install.tar.gz", "./install.tar.gz", os.Getenv("remoteUser"), os.Getenv("HOME")+"/.ssh/id_rsa", os.Getenv("remoteHost"), test)
 		if err != nil {
 			errorLog.Println(err)
 			return
@@ -115,7 +132,7 @@ func Docker(command, test string) {
 			"exit",
 			// "exit",
 		}
-		err = SshExec(os.Getenv("remoteHost"), "./id_rsa", os.Getenv("remoteUser"), remoteCommands, test)
+		err = SshExec(os.Getenv("remoteHost"), os.Getenv("HOME")+"/.ssh/id_rsa", os.Getenv("remoteUser"), remoteCommands, test)
 		if err != nil {
 			errorLog.Println(err)
 		}
