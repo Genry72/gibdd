@@ -119,6 +119,7 @@ func main() {
 					regreg := string([]rune(fullRegnum)[6:])               //Обрезаем первые 6 символов (регион)
 					if len(reg) < 2 {
 						telegram.SendMessage("Не найдено ТС с таким сочетанием СТС и ГРЗ. Проверьте корректность введенных данных", chatID, reply_to)
+						offset = newOffset
 						continue
 					}
 					stsnum := reg[1]
