@@ -117,11 +117,11 @@ func main() {
 					fullRegnum := reg[0]                                   //Полный номер, включая регион
 					regnum := string([]rune(fullRegnum)[:6])               //Первые 6 символов (номер)
 					regreg := string([]rune(fullRegnum)[6:])               //Обрезаем первые 6 символов (регион)
-					stsnum := reg[1]
-					if len(stsnum) < 2 {
-						telegram.SendMessage("Не найдено ТС с таким сочетанием СТС и ГРЗ. проверьте корректность введенных данных", chatID, reply_to)
+					if len(reg) < 2 {
+						telegram.SendMessage("Не найдено ТС с таким сочетанием СТС и ГРЗ. Проверьте корректность введенных данных", chatID, reply_to)
 						continue
 					}
+					stsnum := reg[1]
 					go func() {
 						telegram.SendMessage(fmt.Sprintln("Debug: Проверяем корректность введенных данных, ожидайте"), myID, "")
 						telegram.SendMessage(fmt.Sprintln("Проверяем корректность введенных данных, ожидайте"), chatID, reply_to)
